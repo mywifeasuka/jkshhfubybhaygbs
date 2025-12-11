@@ -1,0 +1,57 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+<qresource prefix="/">
+    <file alias="img/apple_setup.bmp">img/APPLE_SETUP.bmp</file>
+    <file alias="img/cancel.bmp">img/CANCEL.bmp</file>
+    <file alias="img/checkbox_button.bmp">img/CHECKBOX_BUTTON.bmp</file>
+    <file alias="img/default.bmp">img/DEFAULT.bmp</file>
+    <file alias="img/dropdown_button.bmp">img/DROPDOWN_BUTTON.bmp</file>
+    <file alias="img/main_dlg_bg.bmp">img/MAIN_DLG_BG.bmp</file>
+    <file alias="img/main_dlg_exit.bmp">img/MAIN_DLG_EXIT.bmp</file>
+    <file alias="img/main_dlg_replay.bmp">img/MAIN_DLG_REPLAY.bmp</file>
+    <file alias="img/main_quit.bmp">img/MAIN_QUIT.bmp</file>
+    <file alias="img/mole_appear.bmp">img/MOLE_APPEAR.bmp</file>
+    <file alias="img/background.bmp">img/MOLE_BACKGROUND.BMP</file>
+    <file alias="img/mole_dlg_bg.bmp">img/MOLE_DLG_BG.bmp</file>
+    <file alias="img/mole_dlg_end.bmp">img/MOLE_DLG_END.bmp</file>
+    <file alias="img/mole_dlg_next.bmp">img/MOLE_DLG_NEXT.bmp</file>
+    <file alias="img/mole_dlg_replay.bmp">img/MOLE_DLG_REPLAY.bmp</file>
+    <file alias="img/mole_hide.bmp">img/MOLE_HIDE.bmp</file>
+    <file alias="img/mole_hit.bmp">img/MOLE_HIT.bmp</file>
+    <file alias="img/mole_normal.bmp">img/MOLE_NORMAL.bmp</file>
+    <file alias="img/carrot.bmp">img/MOLE_RADISH.bmp</file>
+    <file alias="img/mole_setup.bmp">img/MOLE_SETUP.bmp</file>
+    <file alias="img/no.bmp">img/NO.bmp</file>
+    <file alias="img/ok.bmp">img/OK.bmp</file>
+    <file alias="img/public_end.bmp">img/PUBLIC_END.bmp</file>
+    <file alias="img/public_end_on.bmp">img/PUBLIC_END_on.bmp</file>
+    <file alias="img/public_end_clicked.bmp">img/PUBLIC_END_clicked.bmp</file>
+    <file alias="img/public_exit.bmp">img/PUBLIC_EXIT.bmp</file>
+    <file alias="img/public_exit_on.bmp">img/PUBLIC_EXIT_on.bmp</file>
+    <file alias="img/public_exit_clicked.bmp">img/PUBLIC_EXIT_clicked.bmp</file>
+    <file alias="img/public_pause.bmp">img/PUBLIC_PAUSE.bmp</file>
+    <file alias="img/public_pause_clicked.bmp">img/PUBLIC_PAUSE_clicked.bmp</file>
+    <file alias="img/public_pause_on.bmp">img/PUBLIC_PAUSE_on.bmp</file>
+    <file alias="img/public_settings.bmp">img/PUBLIC_SETUP.bmp</file>
+    <file alias="img/public_settings_on.bmp">img/PUBLIC_SETUP_on.bmp</file>
+    <file alias="img/public_settings_clicked.bmp">img/PUBLIC_SETUP_clicked.bmp</file>
+    <file alias="img/public_start.bmp">img/PUBLIC_START.bmp</file>
+    <file alias="img/public_start_on.bmp">img/PUBLIC_START_on.bmp</file>
+    <file alias="img/public_start_clicked.bmp">img/PUBLIC_START_clicked.bmp</file>
+    <file alias="img/slider_bg.bmp">img/SLIDER_BG.bmp</file>
+    <file alias="img/slider_slider.bmp">img/SLIDER_SLIDER.bmp</file>
+    <file alias="img/yes.bmp">img/YES.bmp</file>
+    
+    <file alias="snd/anibtn_click.wav">snd/ANIBTN_CLICK.wav</file>
+    <file alias="snd/anibtn_enter.wav">snd/ANIBTN_ENTER.wav</file>
+    <file alias="snd/click.wav">snd/BTN_CLICK.wav</file>
+    <file alias="snd/glide.wav">snd/GLIDE.wav</file>
+    <file alias="snd/background.wav">snd/LAMISTER_BG.wav</file>
+    <file alias="snd/mouse_away.wav">snd/MOUSE_AWAY.wav</file>
+    <file alias="snd/mouse_bg.wav">snd/MOUSE_BG.wav</file>
+    <file alias="snd/hit.wav">snd/MOUSE_CLICK.wav</file>
+    <file alias="snd/mouse_out.wav">snd/MOUSE_OUT.wav</file>
+    <file alias="snd/type.wav">snd/TYPE.wav</file>
+    <file alias="snd/upgrade.wav">snd/UPGRADE.wav</file>
+</qresource>
+</RCC>

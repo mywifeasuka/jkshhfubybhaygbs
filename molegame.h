@@ -1,0 +1,62 @@
+﻿#ifndef MOLEGAME_H
+#define MOLEGAME_H
+
+#include "gamebase.h"
+#include "mole.h"
+#include "gamesettings.h"
+#include <QVector>
+#include <QLabel>
+#include <QTimer>
+#include <QtMultimedia/QSoundEffect>
+
+class MoleGame : public GameBase {
+    Q_OBJECT
+
+public:
+    explicit MoleGame(QObject *parent = nullptr);
+    ~MoleGame();
+
+    // --- 实现 GameBase 接口 ---
+    void initGame() override;
+    void startGame() override;
+    void pauseGame() override;
+    void stopGame() override;
+    void draw(QPainter &painter) override;
+    void handleKeyPress(QKeyEvent *event) override;
+
+    // 设置相关（保留原逻辑）
+    void updateSettings(const GameSettingsData& data);
+
+private slots:
+    void onGameTimerTick();
+    void onSpawnTimerTick();
+    void onMoleHit();
+    void onMoleEscaped();
+
+private:
+    void spawnMole();
+    void checkGameOver();
+
+    // 游戏资源与对象
+    QPixmap m_backgroundPixmap;
+    QPixmap m_carrotPixmap;
+    QVector<Mole*> m_moles;
+    
+    // 音效
+    QSoundEffect* m_hitSound;
+    QSoundEffect* m_missSound;
+    QSoundEffect* m_backgroundMusic;
+
+    // 计时器
+    QTimer* m_gameTimer;
+    QTimer* m_spawnTimer;
+
+    // 游戏数据
+    GameSettingsData m_settings;
+    int m_lives;
+    int m_remainingTimeSec;
+    int m_hitCount;
+    int m_totalSpawns;
+};
+
+#endif // MOLEGAME_H
