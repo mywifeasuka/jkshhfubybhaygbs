@@ -17,9 +17,11 @@ MoleGame::MoleGame(QObject *parent) : GameBase(parent) {
     // 2. 初始化音效
     m_hitSound = new QSoundEffect(this);
     m_hitSound->setSource(QUrl::fromLocalFile(":/snd/hit.wav"));
-    
+
+
     m_missSound = new QSoundEffect(this);
     m_missSound->setSource(QUrl::fromLocalFile(":/snd/miss.wav"));
+
     
     m_backgroundMusic = new QSoundEffect(this);
     m_backgroundMusic->setSource(QUrl::fromLocalFile(":/snd/background.wav"));

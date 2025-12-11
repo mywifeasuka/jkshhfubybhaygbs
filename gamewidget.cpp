@@ -9,6 +9,10 @@ GameWidget::GameWidget(QWidget* parent)
     setFixedSize(800, 600); // 固定窗口大小
     setWindowTitle("金山打字通重制版 - C++实战");
 
+    m_renderTimer = new QTimer(this);
+    m_renderTimer->setInterval(16); // 约 60 FPS
+    connect(m_renderTimer, &QTimer::timeout, this, QOverload<>::of(&QWidget::update));
+
     // 1. 初始化游戏实例
     m_moleGame = new MoleGame(this);
     m_policeGame = new PoliceGame(this);
@@ -23,9 +27,7 @@ GameWidget::GameWidget(QWidget* parent)
     // 默认显示主菜单
     onReturnToMenu();
 
-    m_renderTimer = new QTimer(this);
-    m_renderTimer->setInterval(16); // 约 60 FPS
-    connect(m_renderTimer, &QTimer::timeout, this, QOverload<>::of(&QWidget::update));
+    
 }
 
 GameWidget::~GameWidget() {
