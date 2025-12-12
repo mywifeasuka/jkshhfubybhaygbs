@@ -53,5 +53,135 @@
     <file alias="snd/mouse_out.wav">snd/MOUSE_OUT.wav</file>
     <file alias="snd/type.wav">snd/TYPE.wav</file>
     <file alias="snd/upgrade.wav">snd/UPGRADE.wav</file>
+
+	<file alias="img/apple_background.png">Apple/Images/APPLE_BACKGROUND.png</file>
+	<file alias="img/apple_bad.png">Apple/Images/APPLE_BAD.png</file>
+	<file alias="img/apple_basket.png">Apple/Images/APPLE_BASKET.png</file>
+	<file alias="img/apple_dlg_bg.png">Apple/Images/APPLE_DLG_BG.png</file>
+	<file alias="img/apple_dlg_end.png">Apple/Images/APPLE_DLG_END.png</file>
+	<file alias="img/apple_dlg_next.png">Apple/Images/APPLE_DLG_NEXT.png</file>
+	<file alias="img/apple_dlg_replay.png">Apple/Images/APPLE_DLG_REPLAY.png</file>
+	<file alias="img/apple_normal.png">Apple/Images/APPLE_NORMAL.png</file>
+	<file alias="img/apple_small.png">Apple/Images/APPLE_SMALL.png</file>
+
+	<file alias="snd/apple_bg.wav">Apple/Sounds/APPLE_BG.wav</file>
+	<file alias="snd/apple_in.wav">Apple/Sounds/APPLE_IN.wav</file>
+
+	<file alias="img/frog_back_1.png">Frog/Images/FROG_BACK_1.png</file>
+	<file alias="img/frog_back_2.png">Frog/Images/FROG_BACK_2.png</file>
+	<file alias="img/frog_background.png">Frog/Images/FROG_BACKGROUND.png</file>
+	<file alias="img/frog_dlg_bg.png">Frog/Images/FROG_DLG_BG.png</file>
+	<file alias="img/frog_dlg_end.png">Frog/Images/FROG_DLG_END.png</file>
+	<file alias="img/frog_dlg_next.png">Frog/Images/FROG_DLG_NEXT.png</file>
+	<file alias="img/frog_dlg_replay.png">Frog/Images/FROG_DLG_REPLAY.png</file>
+	<file alias="img/frog_end.png">Frog/Images/FROG_END.png</file>
+	<file alias="img/frog_exit.png">Frog/Images/FROG_EXIT.png</file>
+	<file alias="img/frog_front_1.png">Frog/Images/FROG_FRONT_1.png</file>
+	<file alias="img/frog_front_2.png">Frog/Images/FROG_FRONT_2.png</file>
+	<file alias="img/frog_leaf.png">Frog/Images/FROG_LEAF.png</file>
+	<file alias="img/frog_pause.png">Frog/Images/FROG_PAUSE.png</file>
+	<file alias="img/frog_setting.png">Frog/Images/FROG_SETTING.png</file>
+	<file alias="img/frog_setup.png">Frog/Images/FROG_SETUP.png</file>
+	<file alias="img/frog_start.png">Frog/Images/FROG_START.png</file>
+
+	<file alias="snd/frog_back.wav">Frog/Sounds/FROG_BACK.wav</file>
+	<file alias="snd/frog_bg.wav">Frog/Sounds/FROG_BG.wav</file>
+	<file alias="snd/frog_jump.wav">Frog/Sounds/FROG_JUMP.wav</file>
+
+	<file alias="img/police_0_0_0.png">Police/Images/POLICE_0_0_0.png</file>
+	<file alias="img/police_0_0_1.png">Police/Images/POLICE_0_0_1.png</file>
+	<file alias="img/police_0_0_2.png">Police/Images/POLICE_0_0_2.png</file>
+	<file alias="img/police_0_0_3.png">Police/Images/POLICE_0_0_3.png</file>
+	<file alias="img/police_0_1_0.png">Police/Images/POLICE_0_1_0.png</file>
+	<file alias="img/police_0_1_1.png">Police/Images/POLICE_0_1_1.png</file>
+	<file alias="img/police_0_1_2.png">Police/Images/POLICE_0_1_2.png</file>
+	<file alias="img/police_0_1_3.png">Police/Images/POLICE_0_1_3.png</file>
+	<file alias="img/police_0_2_0.png">Police/Images/POLICE_0_2_0.png</file>
+	<file alias="img/police_0_2_1.png">Police/Images/POLICE_0_2_1.png</file>
+	<file alias="img/police_0_2_2.png">Police/Images/POLICE_0_2_2.png</file>
+	<file alias="img/police_0_2_3.png">Police/Images/POLICE_0_2_3.png</file>
+	<file alias="img/police_0_3_0.png">Police/Images/POLICE_0_3_0.png</file>
+	<file alias="img/police_0_3_1.png">Police/Images/POLICE_0_3_1.png</file>
+	<file alias="img/police_0_3_2.png">Police/Images/POLICE_0_3_2.png</file>
+	<file alias="img/police_0_3_3.png">Police/Images/POLICE_0_3_3.png</file>
+
+	<file alias="img/police_1_0_0.png">Police/Images/POLICE_1_0_0.png</file>
+	<file alias="img/police_1_0_1.png">Police/Images/POLICE_1_0_1.png</file>
+	<file alias="img/police_1_0_2.png">Police/Images/POLICE_1_0_2.png</file>
+	<file alias="img/police_1_0_3.png">Police/Images/POLICE_1_0_3.png</file>
+	<file alias="img/police_1_1_0.png">Police/Images/POLICE_1_1_0.png</file>
+	<file alias="img/police_1_1_1.png">Police/Images/POLICE_1_1_1.png</file>
+	<file alias="img/police_1_1_2.png">Police/Images/POLICE_1_1_2.png</file>
+	<file alias="img/police_1_1_3.png">Police/Images/POLICE_1_1_3.png</file>
+	<file alias="img/police_1_2_0.png">Police/Images/POLICE_1_2_0.png</file>
+	<file alias="img/police_1_2_1.png">Police/Images/POLICE_1_2_1.png</file>
+	<file alias="img/police_1_2_2.png">Police/Images/POLICE_1_2_2.png</file>
+	<file alias="img/police_1_2_3.png">Police/Images/POLICE_1_2_3.png</file>
+	<file alias="img/police_1_3_0.png">Police/Images/POLICE_1_3_0.png</file>
+	<file alias="img/police_1_3_1.png">Police/Images/POLICE_1_3_1.png</file>
+	<file alias="img/police_1_3_2.png">Police/Images/POLICE_1_3_2.png</file>
+	<file alias="img/police_1_3_3.png">Police/Images/POLICE_1_3_3.png</file>
+
+	<file alias="img/police_background.png">Police/Images/POLICE_BACKGROUND.png</file>
+	<file alias="img/police_bike.png">Police/Images/POLICE_BIKE.png</file>
+	<file alias="img/police_blue.png">Police/Images/POLICE_BLUE.png</file>
+	<file alias="img/police_cancel.png">Police/Images/POLICE_CANCEL.png</file>
+	<file alias="img/police_car.png">Police/Images/POLICE_CAR.png</file>
+	<file alias="img/police_create.png">Police/Images/POLICE_CREATE.png</file>
+	<file alias="img/police_input.png">Police/Images/POLICE_INPUT.png</file>
+	<file alias="img/police_join.png">Police/Images/POLICE_JOIN.png</file>
+	<file alias="img/police_lost_0.png">Police/Images/POLICE_LOST_0.png</file>
+	<file alias="img/police_lost_1.png">Police/Images/POLICE_LOST_1.png</file>
+	<file alias="img/police_mainmenu_bg.png">Police/Images/POLICE_MAINMENU_BG.png</file>
+	<file alias="img/police_mainmenu_exit.png">Police/Images/POLICE_MAINMENU_EXIT.png</file>
+	<file alias="img/police_mainmenu_multi.png">Police/Images/POLICE_MAINMENU_MULTI.png</file>
+	<file alias="img/police_mainmenu_single.png">Police/Images/POLICE_MAINMENU_SINGLE.png</file>
+	<file alias="img/police_ping.png">Police/Images/POLICE_PING.png</file>
+	<file alias="img/police_ping_bg.png">Police/Images/POLICE_PING_BG.png</file>
+	<file alias="img/police_police.png">Police/Images/POLICE_POLICE.png</file>
+	<file alias="img/police_refresh.png">Police/Images/POLICE_REFRESH.png</file>
+	<file alias="img/police_return.png">Police/Images/POLICE_RETURN.png</file>
+	<file alias="img/police_serverlist_bg.png">Police/Images/POLICE_SERVERLIST_BG.png</file>
+	<file alias="img/police_setting_bg.png">Police/Images/POLICE_SETTING_BG.png</file>
+	<file alias="img/police_start.png">Police/Images/POLICE_START.png</file>
+	<file alias="img/police_thief.png">Police/Images/POLICE_THIEF.png</file>
+	<file alias="img/police_win_0.png">Police/Images/POLICE_WIN_0.png</file>
+	<file alias="img/police_win_1.png">Police/Images/POLICE_WIN_1.png</file>
+	<file alias="img/police_yellow.png">Police/Images/POLICE_YELLOW.png</file>
+
+	<file alias="snd/pt_police_catch.wav">Police/Sounds/PT_POLICE_CATCH.wav</file>
+	<file alias="snd/pt_police_entry.wav">Police/Sounds/PT_POLICE_ENTRY.wav</file>
+	<file alias="snd/pt_thief_away.wav">Police/Sounds/PT_THIEF_AWAY.wav</file>
+	<file alias="snd/pt_thief_brake.wav">Police/Sounds/PT_THIEF_BRAKE.wav</file>
+	<file alias="snd/pt_thief_entry.wav">Police/Sounds/PT_THIEF_ENTRY.wav</file>
+	<file alias="snd/pt_thief_turn.wav">Police/Sounds/PT_THIEF_TURN.wav</file>
+
+	<file alias="img/space_background.png">Space/Images/SPACE_BACKGROUND.png</file>
+	<file alias="img/space_bomb.png">Space/Images/SPACE_BOMB.png</file>
+	<file alias="img/space_caption_back.png">Space/Images/SPACE_CAPTION_BACK.png</file>
+	<file alias="img/space_enemy_0.png">Space/Images/SPACE_ENEMY_0.png</file>
+	<file alias="img/space_enemy_4.png">Space/Images/SPACE_ENEMY_4.png</file>
+	<file alias="img/space_exit.png">Space/Images/SPACE_EXIT.png</file>
+	<file alias="img/space_explosion_0.png">Space/Images/SPACE_EXPLOSION_0.png</file>
+	<file alias="img/space_hiscore.png">Space/Images/SPACE_HISCORE.png</file>
+	<file alias="img/space_hiscore_bg.png">Space/Images/SPACE_HISCORE_BG.png</file>
+	<file alias="img/space_label_life.png">Space/Images/SPACE_LABEL_LIFE.png</file>
+	<file alias="img/space_label_score.png">Space/Images/SPACE_LABEL_SCORE.png</file>
+	<file alias="img/space_label_time.png">Space/Images/SPACE_LABEL_TIME.png</file>
+	<file alias="img/space_life.png">Space/Images/SPACE_LIFE.png</file>
+	<file alias="img/space_life_over.png">Space/Images/SPACE_LIFE_OVER.png</file>
+	<file alias="img/space_mainmenu_bg.png">Space/Images/SPACE_MAINMENU_BG.png</file>
+	<file alias="img/space_option.png">Space/Images/SPACE_OPTION.png</file>
+	<file alias="img/space_return.png">Space/Images/SPACE_RETURN.png</file>
+	<file alias="img/space_ship.png">Space/Images/SPACE_SHIP.png</file>
+	<file alias="img/space_stars.png">Space/Images/SPACE_STARS.png</file>
+	<file alias="img/space_start.png">Space/Images/SPACE_START.png</file>
+
+	<file alias="snd/space_bg.wav">Space/Sounds/SPACE_BG.wav</file>
+	<file alias="snd/space_blast.wav">Space/Sounds/SPACE_BLAST.wav</file>
+	<file alias="snd/space_planeout.wav">Space/Sounds/SPACE_PLANEOUT.wav</file>
+	<file alias="snd/space_shoot.wav">Space/Sounds/SPACE_SHOOT.wav</file>
+	<file alias="snd/space_wordout.wav">Space/Sounds/SPACE_WORDOUT.wav</file>
+
 </qresource>
 </RCC>

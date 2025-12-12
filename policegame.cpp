@@ -1,155 +1,289 @@
 ﻿#include "policegame.h"
+#include "datamanager.h"
+#include <QCoreApplication>
+#include <QRandomGenerator>
 #include <QDebug>
-#include <QFile>
+#include <QtMath>
 
-PoliceGame::PoliceGame(QObject *parent) : GameBase(parent) {
-    // 假设地图是斜45度的长图，这里暂时用简单的矩形代替逻辑
-    // 请确保资源路径正确，或者先用纯色填充测试
-    m_bgPixmap.load(":/img/police_bg.png"); 
-    m_policePixmap.load(":/img/police_car.png");
-    
-    m_timer = new QTimer(this);
-    m_timer->setInterval(30); // 约30FPS
-    connect(m_timer, &QTimer::timeout, this, &PoliceGame::onGameTick);
+// 游戏配置
+const int GAME_FPS = 60;
+const double SCREEN_WIDTH = 800.0;
+const double SCREEN_HEIGHT = 600.0;
+
+PoliceGame::PoliceGame(QObject* parent) : GameBase(parent) {
+    loadResources(); // 加载资源
+    initMapPath();   // 初始化路径
+
+    m_physicsTimer = new QTimer(this);
+    m_physicsTimer->setInterval(1000 / GAME_FPS);
+    connect(m_physicsTimer, &QTimer::timeout, this, &PoliceGame::onGameTick);
 }
 
 PoliceGame::~PoliceGame() {}
 
-void PoliceGame::initGame() {
-    m_state = GameState::Ready;
-    m_currentIndex = 0;
-    m_progress = 0.0;
-    m_enemyProgress = 0.0;
-    m_mapScrollX = 0;
-    m_score = 0;
-    
-    loadArticle(); // 加载一篇文章
+void PoliceGame::loadResources() {
+// 1. 加载背景 (使用 qrc 中定义的别名) [cite: 371]
+    m_bgPixmap.load(":/img/police_background.png");
+
+    // 初始化数组大小
+    m_policeSprites.resize(4);
+    m_thiefSprites.resize(4);
+
+// 2. 加载警察车辆 (Police Car 对应资源名为 police_0_3_x) [cite: 371]
+    // 0:左上, 1:左下, 2:右上, 3:右下
+    m_policeSprites[0].load(":/img/police_0_3_0.png");
+    m_policeSprites[1].load(":/img/police_0_3_1.png");
+    m_policeSprites[2].load(":/img/police_0_3_2.png");
+    m_policeSprites[3].load(":/img/police_0_3_3.png");
+
+// 3. 加载小偷车辆 (Thief Car 对应资源名为 police_1_3_x) [cite: 371]
+    m_thiefSprites[0].load(":/img/police_1_3_0.png");
+    m_thiefSprites[1].load(":/img/police_1_3_1.png");
+    m_thiefSprites[2].load(":/img/police_1_3_2.png");
+    m_thiefSprites[3].load(":/img/police_1_3_3.png");
+
+    // 容错：如果图片加载失败，创建一个红/蓝方块代替，防止崩溃
+    if (m_policeSprites[0].isNull()) {
+        QPixmap temp(80, 40); temp.fill(Qt::blue);
+        for (int i = 0; i < 4; i++) m_policeSprites[i] = temp;
+    }
+    if (m_thiefSprites[0].isNull()) {
+        QPixmap temp(80, 40); temp.fill(Qt::red);
+        for (int i = 0; i < 4; i++) m_thiefSprites[i] = temp;
+    }
 }
 
 void PoliceGame::loadArticle() {
-    // 这里暂时硬编码，后续应从文件读取
-    m_targetText = "Located in the southeastern Philippines, Davao is a city totally given.";
+    // 第一次运行时加载
+    static bool isLoaded = false;
+    if (!isLoaded) {
+        QString dataPath = QCoreApplication::applicationDirPath() + "/Data/English/E_General";
+        DataManager::instance().loadArticlesFromDir(dataPath);
+        isLoaded = true;
+    }
+
+    m_targetText = DataManager::instance().getRandomArticle();
+
+    // 重置进度
+    m_currentIndex = 0;
+}
+
+void PoliceGame::initMapPath() {
+    m_pathPoints.clear();
+
+    // 根据你描述的坐标录入 [用户描述: 起点在40，800...]
+    m_pathPoints << QPointF(40, 800);    // 起点
+    m_pathPoints << QPointF(280, 680);   // 路口1 (左转)
+    m_pathPoints << QPointF(200, 620);   // 路口2 (右转)
+    m_pathPoints << QPointF(540, 420);   // 路口3 (左转)
+    m_pathPoints << QPointF(360, 320);   // 路口4 (右转)
+    m_pathPoints << QPointF(620, 200);   // 路口5 (右转)
+    m_pathPoints << QPointF(860, 320);   // 路口6 (左转)
+    m_pathPoints << QPointF(1140, 200);  // 路口7 (右转)
+    m_pathPoints << QPointF(1440, 360);  // 路口8 (右转)
+    m_pathPoints << QPointF(300, 940);   // 路口9 (右转，大直道)
+    m_pathPoints << QPointF(40, 800);    // 回到起点 (闭环)
+
+    // 计算地图总长度
+    m_totalMapLength = 0;
+    for (int i = 0; i < m_pathPoints.size() - 1; ++i) {
+        QLineF line(m_pathPoints[i], m_pathPoints[i + 1]);
+        m_totalMapLength += line.length();
+    }
+}
+
+void PoliceGame::getCarState(double distance, const QVector<QPixmap>& sprites,
+    QPointF& outPos, QPixmap& outSprite)
+{
+    // 循环处理 distance
+    while (distance > m_totalMapLength) distance -= m_totalMapLength;
+    while (distance < 0) distance += m_totalMapLength;
+
+    double currentDist = 0;
+
+    for (int i = 0; i < m_pathPoints.size() - 1; ++i) {
+        QLineF segment(m_pathPoints[i], m_pathPoints[i + 1]);
+        double segmentLen = segment.length();
+
+        if (distance <= currentDist + segmentLen) {
+            // 线性插值计算坐标
+            double ratio = (distance - currentDist) / segmentLen;
+            outPos = segment.pointAt(ratio);
+
+            // 计算角度 (Qt 坐标系中: 0=右, 90=上, 180=左, 270=下)
+            // 注意: QLineF::angle() 返回 0-360
+            double angle = segment.angle();
+
+            // 根据角度选择贴图索引
+            // 0:左上(90-180), 1:左下(180-270), 2:右上(0-90), 3:右下(270-360)
+            int spriteIndex = 0;
+
+            if (angle >= 0 && angle < 90) {
+                spriteIndex = 2; // 右上
+            }
+            else if (angle >= 90 && angle < 180) {
+                spriteIndex = 0; // 左上
+            }
+            else if (angle >= 180 && angle < 270) {
+                spriteIndex = 1; // 左下
+            }
+            else {
+                spriteIndex = 3; // 右下
+            }
+
+            // 边界检查
+            if (spriteIndex >= 0 && spriteIndex < sprites.size()) {
+                outSprite = sprites[spriteIndex];
+            }
+            return;
+        }
+        currentDist += segmentLen;
+    }
+
+    // 默认回退
+    outPos = m_pathPoints.last();
+    outSprite = sprites[3];
+}
+
+void PoliceGame::initGame() {
+    m_state = GameState::Ready;
+    m_score = 0;
+
+    m_playerDistance = 0.0;
+    m_enemyDistance = 400.0; // 敌人领先一段距离
+
+    m_playerSpeed = 0.0;
+    m_enemySpeed = 2.0;      // 敌人恒定速度
+
+    m_currentIndex = 0;
+    m_isTypingError = false;
+
+    //m_targetText = "The quick brown fox jumps over the lazy dog.";
+    loadArticle();
+    emit scoreChanged(0);
 }
 
 void PoliceGame::startGame() {
-    if(m_state == GameState::Ready || m_state == GameState::GameOver) {
+    if (m_state == GameState::Ready || m_state == GameState::GameOver) {
         initGame();
         m_state = GameState::Playing;
-        m_timer->start();
+        m_physicsTimer->start();
     }
 }
 
 void PoliceGame::pauseGame() {
     if (m_state == GameState::Playing) {
         m_state = GameState::Paused;
-        m_timer->stop();
-    } else if (m_state == GameState::Paused) {
+        m_physicsTimer->stop();
+    }
+    else if (m_state == GameState::Paused) {
         m_state = GameState::Playing;
-        m_timer->start();
+        m_physicsTimer->start();
     }
 }
 
 void PoliceGame::stopGame() {
     m_state = GameState::GameOver;
-    m_timer->stop();
-}
-
-void PoliceGame::handleKeyPress(QKeyEvent *event) {
-    if (m_state != GameState::Playing) return;
-
-    QString text = event->text();
-    if (text.isEmpty()) return;
-
-    QChar key = text.at(0);
-    
-    // 核心打字逻辑
-    if (m_currentIndex < m_targetText.length()) {
-        if (key == m_targetText.at(m_currentIndex)) {
-            // 输入正确
-            m_currentIndex++;
-            m_score += 10;
-            
-            // 增加玩家速度或瞬间位移
-            m_progress += 0.005; // 假设每打对一个字前进一点
-            
-            emit scoreChanged(m_score);
-        } else {
-            // 输入错误，可以播放音效或惩罚
-        }
-    }
-    
-    // 检查是否完成
-    if (m_currentIndex >= m_targetText.length()) {
-        m_state = GameState::Victory;
-        stopGame();
-        emit gameFinished(m_score, true);
-    }
+    m_physicsTimer->stop();
 }
 
 void PoliceGame::onGameTick() {
-    // 敌人自动前进逻辑 (模拟电脑)
-    m_enemyProgress += 0.001; // 匀速前进
+    // 移动逻辑
+    m_enemyDistance += m_enemySpeed;
+    m_playerDistance += m_playerSpeed;
 
-    // 简单的追逐判定逻辑
-    if (m_progress >= 1.0) {
-        // 玩家到达终点
+    // 阻力
+    m_playerSpeed *= 0.96;
+    if (m_playerSpeed < 0.1) m_playerSpeed = 0;
+
+    // 胜负判定
+    if (m_playerDistance >= m_enemyDistance) {
+        m_state = GameState::Victory;
         stopGame();
-        emit gameFinished(m_score, true);
+        emit gameFinished(m_score + 500, true);
     }
-    
-    // 滚动地图逻辑：让地图跟随玩家位置
-    // 假设地图总长 2000 像素
-    double mapLength = 2000.0;
-    m_mapScrollX = m_progress * (mapLength - 800); // 800是屏幕宽度
 }
 
-void PoliceGame::draw(QPainter &painter) {
-    // 1. 绘制背景 (支持滚动)
-    // 这里使用 save/restore 和 translate 来模拟摄像头移动
+void PoliceGame::draw(QPainter& painter) {
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    // 1. 获取状态
+    QPointF playerPos, enemyPos;
+    QPixmap playerSprite, enemySprite;
+
+    getCarState(m_playerDistance, m_policeSprites, playerPos, playerSprite);
+    getCarState(m_enemyDistance, m_thiefSprites, enemyPos, enemySprite);
+
+    // 2. 摄像机逻辑 (以玩家为中心)
+    QPointF cameraOffset(SCREEN_WIDTH / 2 - playerPos.x(), SCREEN_HEIGHT / 2 - playerPos.y());
+
     painter.save();
-    painter.translate(-m_mapScrollX, 0); 
-    
-    // 如果没有图，先画个背景色
-    if(m_bgPixmap.isNull()) {
-        painter.fillRect(0, 0, 2000, 600, Qt::darkGray);
-        // 画条路
-        painter.fillRect(0, 300, 2000, 100, Qt::gray);
-    } else {
+    painter.translate(cameraOffset);
+
+    // 3. 绘制背景
+    if (!m_bgPixmap.isNull()) {
         painter.drawPixmap(0, 0, m_bgPixmap);
     }
+    else {
+        // Debug 模式: 画线
+        painter.setPen(QPen(Qt::gray, 100));
+        painter.drawPolyline(m_pathPoints.data(), m_pathPoints.size());
+    }
 
-    // 2. 绘制角色 (根据进度计算 x 坐标)
-    double mapLength = 2000.0;
-    int playerX = (int)(m_progress * mapLength);
-    int enemyX = (int)(m_enemyProgress * mapLength);
+    // 4. 绘制车辆 (居中绘制)
+    // 敌人
+    if (!enemySprite.isNull()) {
+        painter.drawPixmap(enemyPos.x() - enemySprite.width() / 2,
+            enemyPos.y() - enemySprite.height() / 2,
+            enemySprite);
+    }
 
-    painter.setBrush(Qt::blue);
-    painter.drawRect(playerX, 320, 50, 50); // 玩家(警察)
-    painter.drawText(playerX, 310, "Player");
+    // 玩家
+    if (!playerSprite.isNull()) {
+        painter.drawPixmap(playerPos.x() - playerSprite.width() / 2,
+            playerPos.y() - playerSprite.height() / 2,
+            playerSprite);
+    }
 
-    painter.setBrush(Qt::red);
-    painter.drawRect(enemyX, 320, 50, 50); // 敌人(小偷)
-    painter.drawText(enemyX, 310, "Thief");
-    
-    painter.restore(); // 恢复坐标系，绘制UI
+    painter.restore(); // 结束摄像机
 
-    // 3. 绘制UI (打字条)
-    painter.fillRect(0, 500, 800, 100, QColor(255, 255, 255, 200)); // 半透明底板
-    
-    painter.setFont(QFont("Arial", 16));
-    
-    // 绘制已输入的部分 (绿色)
-    painter.setPen(Qt::green);
+    // 5. 绘制 UI
+    QRect uiRect(0, 480, 800, 120);
+    painter.fillRect(uiRect, QColor(0, 0, 0, 180));
+    painter.setFont(QFont("Arial", 18, QFont::Bold)); // 用通用字体防止乱码
+
+    int textX = 50; int textY = 550;
     QString typed = m_targetText.left(m_currentIndex);
-    painter.drawText(50, 550, typed);
-    
-    // 计算已输入部分的宽度，以便接着画未输入部分
-    int typedWidth = painter.fontMetrics().horizontalAdvance(typed);
-    
-    // 绘制未输入的部分 (黑色)
-    painter.setPen(Qt::black);
-    painter.drawText(50 + typedWidth, 550, m_targetText.mid(m_currentIndex));
-    
-    // 绘制光标
-    painter.fillRect(50 + typedWidth, 535, 2, 20, Qt::black);
+
+    painter.setPen(Qt::green);
+    painter.drawText(textX, textY, typed);
+
+    int w = painter.fontMetrics().horizontalAdvance(typed);
+    painter.setPen(Qt::white);
+    painter.drawText(textX + w, textY, m_targetText.mid(m_currentIndex));
+
+    painter.fillRect(textX + w, textY - 20, 3, 25, m_isTypingError ? Qt::red : Qt::yellow);
+}
+
+void PoliceGame::handleKeyPress(QKeyEvent* event) {
+    if (m_state != GameState::Playing) return;
+    QString text = event->text();
+    if (text.isEmpty()) return;
+
+    if (text.at(0) == m_targetText.at(m_currentIndex)) {
+        m_currentIndex++;
+        m_score += 10;
+        m_playerSpeed += 8.0; // 打对加速
+        m_isTypingError = false;
+        emit scoreChanged(m_score);
+
+        if (m_currentIndex >= m_targetText.length()) {
+            m_currentIndex = 0;
+            m_playerSpeed += 20.0;
+        }
+    }
+    else {
+        m_isTypingError = true;
+        m_playerSpeed *= 0.8;
+    }
 }

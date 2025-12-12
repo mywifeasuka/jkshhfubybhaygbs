@@ -2,47 +2,57 @@
 #define POLICEGAME_H
 
 #include "gamebase.h"
+#include <QPixmap>
+#include <QTimer>
 #include <QVector>
-#include <QStringList>
+#include <QPointF>
 
 class PoliceGame : public GameBase {
     Q_OBJECT
 public:
-    explicit PoliceGame(QObject *parent = nullptr);
+    explicit PoliceGame(QObject* parent = nullptr);
     ~PoliceGame();
 
     void initGame() override;
     void startGame() override;
     void pauseGame() override;
     void stopGame() override;
-    void draw(QPainter &painter) override;
-    void handleKeyPress(QKeyEvent *event) override;
+    void draw(QPainter& painter) override;
+    void handleKeyPress(QKeyEvent* event) override;
 
 private slots:
-    void onGameTick(); // 游戏主循环逻辑
+    void onGameTick();
 
 private:
-    void loadArticle();        // 加载文章
-    void checkInput(QChar inputChar); // 检查输入
-    void updatePositions();    // 更新角色位置
+    void initMapPath();   // 初始化你提供的地图路径
+    void loadResources(); // 加载多方向贴图
+    void loadArticle();//加载文章
 
-    // 资源
-    QPixmap m_bgPixmap;        // 地图背景（长图）
-    QPixmap m_policePixmap;    // 警察贴图
-    QPixmap m_thiefPixmap;     // 小偷贴图
+    // 获取当前位置、角度，并返回对应的贴图引用
+    void getCarState(double distance, const QVector<QPixmap>& sprites,
+        QPointF& outPos, QPixmap& outSprite);
 
-    // 游戏逻辑数据
-    QString m_targetText;      // 当前需要输入的完整文章
-    int m_currentIndex;        // 当前输入到的字符索引
-    QString m_typedText;       // 已经输入正确的文本（用于高亮）
-    
-    // 物理/位置数据
-    double m_progress;         // 玩家进度 (0.0 - 1.0)
-    double m_enemyProgress;    // 敌人(电脑)进度
-    double m_mapScrollX;       // 地图滚动位置
-    double m_playerSpeed;      // 玩家速度（根据打字速度变化）
-    
-    QTimer *m_timer;           // 游戏主定时器
+    // --- 资源 ---
+    QPixmap m_bgPixmap;
+
+    // 存储4个方向的贴图：0:左上, 1:左下, 2:右上, 3:右下
+    QVector<QPixmap> m_policeSprites;
+    QVector<QPixmap> m_thiefSprites;
+
+    // --- 游戏数据 ---
+    QString m_targetText;
+    int m_currentIndex;
+    bool m_isTypingError;
+
+    // --- 物理数据 ---
+    double m_totalMapLength;
+    double m_playerDistance;
+    double m_enemyDistance;
+    double m_playerSpeed;
+    double m_enemySpeed;
+
+    QVector<QPointF> m_pathPoints;
+    QTimer* m_physicsTimer;
 };
 
 #endif // POLICEGAME_H
