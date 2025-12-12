@@ -7,7 +7,7 @@ GameWidget::GameWidget(QWidget* parent)
     : QWidget(parent), m_appState(MainMenu), m_currentGame(nullptr)
 {
     setFixedSize(800, 600); // 固定窗口大小
-    setWindowTitle("金山打字通重制版 - C++实战");
+    setWindowTitle(QStringLiteral("金山打字通重制版 - C++实战"));
 
     m_renderTimer = new QTimer(this);
     m_renderTimer->setInterval(16); // 约 60 FPS
@@ -16,6 +16,8 @@ GameWidget::GameWidget(QWidget* parent)
     // 1. 初始化游戏实例
     m_moleGame = new MoleGame(this);
     m_policeGame = new PoliceGame(this);
+    m_spaceGame = new SpaceGame(this);
+    m_appleGame = new AppleGame(this);
 
     // 2. 初始化设置窗口
     m_settingsDialog = new GameSettings(this);
@@ -35,20 +37,28 @@ GameWidget::~GameWidget() {
 }
 
 void GameWidget::setupMainMenu() {
-    m_titleLabel = new QLabel("请选择游戏", this);
+    m_titleLabel = new QLabel(QStringLiteral("请选择游戏"), this);
     m_titleLabel->setStyleSheet("font-size: 24px; font-weight: bold; color: #333;");
     m_titleLabel->move(350, 100);
 
-    m_btnMole = new QPushButton("鼠的故事", this);
+    m_btnMole = new QPushButton(QStringLiteral("鼠的故事"), this);
     m_btnMole->setGeometry(300, 200, 200, 50);
     connect(m_btnMole, &QPushButton::clicked, this, &GameWidget::onSelectMoleGame);
 
-    m_btnPolice = new QPushButton("生死时速", this);
+    m_btnPolice = new QPushButton(QStringLiteral("生死时速"), this);
     m_btnPolice->setGeometry(300, 280, 200, 50);
     connect(m_btnPolice, &QPushButton::clicked, this, &GameWidget::onSelectPoliceGame);
 
-    m_btnExit = new QPushButton("退出程序", this);
-    m_btnExit->setGeometry(300, 360, 200, 50);
+    m_btnSpace = new QPushButton(QStringLiteral("太空大战"), this);
+    m_btnSpace->setGeometry(300, 360, 200, 50); 
+    connect(m_btnSpace, &QPushButton::clicked, this, &GameWidget::onSelectSpaceGame);
+
+    m_btnApple = new QPushButton(QStringLiteral("拯救苹果"), this);
+    m_btnApple->setGeometry(300, 320, 200, 50); 
+    connect(m_btnApple, &QPushButton::clicked, this, &GameWidget::onSelectAppleGame);
+
+    m_btnExit = new QPushButton(QStringLiteral("退出程序"), this);
+    m_btnExit->setGeometry(300, 440, 200, 50);
     connect(m_btnExit, &QPushButton::clicked, this, &GameWidget::onExitApp);
 }
 
@@ -88,6 +98,8 @@ void GameWidget::onReturnToMenu() {
     m_titleLabel->show();
     m_btnMole->show();
     m_btnPolice->show();
+    m_btnSpace->show();
+    m_btnApple->show();
     m_btnExit->show();
 
     // 隐藏游戏控件
@@ -111,6 +123,8 @@ void GameWidget::switchToGame(GameBase* game) {
     m_titleLabel->hide();
     m_btnMole->hide();
     m_btnPolice->hide();
+    m_btnSpace->hide();
+    m_btnApple->hide();
     m_btnExit->hide();
 
     // 显示游戏控件
@@ -134,6 +148,14 @@ void GameWidget::onSelectMoleGame() {
 
 void GameWidget::onSelectPoliceGame() {
     switchToGame(m_policeGame);
+}
+
+void GameWidget::onSelectSpaceGame() {
+    switchToGame(m_spaceGame);
+}
+
+void GameWidget::onSelectAppleGame() {
+    switchToGame(m_appleGame);
 }
 
 void GameWidget::onStartGame() {

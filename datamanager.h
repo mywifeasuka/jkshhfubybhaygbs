@@ -1,5 +1,4 @@
-#pragma once
-#ifndef DATAMANAGER_H
+О╩©#ifndef DATAMANAGER_H
 #define DATAMANAGER_H
 
 #include <QString>
@@ -13,10 +12,10 @@ public:
         return instance;
     }
 
-    // ╪стьж╦╤╗д©б╪об╣дкЫспндуб
+    // Е┼═Х╫╫Ф▄┤Е╝ Г⌡╝Е╫∙Д╦▀Г └Ф┴─Ф°┴Ф√┤Г╚═
     void loadArticlesFromDir(const QString& dirPath);
 
-    // кФ╩З╩Ях║р╩ф╙ндуб
+    // И ▐Ф°╨Х▌╥Е▐√Д╦─Г╞┤Ф√┤Г╚═
     QString getRandomArticle();
 
 private:

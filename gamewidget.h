@@ -11,6 +11,8 @@
 // 引入具体游戏类
 #include "molegame.h"
 #include "policegame.h"
+#include "spacegame.h"
+#include "applegame.h"
 
 class GameWidget : public QWidget {
     Q_OBJECT
@@ -27,6 +29,8 @@ private slots:
     // 菜单按钮槽
     void onSelectMoleGame();
     void onSelectPoliceGame();
+    void onSelectSpaceGame();
+    void onSelectAppleGame();
     void onExitApp();
     
     // 游戏内按钮槽
@@ -57,12 +61,16 @@ private:
     // 具体游戏实例
     MoleGame* m_moleGame;
     PoliceGame* m_policeGame;
+    SpaceGame* m_spaceGame;
+    AppleGame* m_appleGame;
 
     // --- UI 元素 ---
     // 1. 主菜单元素
     QLabel* m_titleLabel;
     QPushButton* m_btnMole;
     QPushButton* m_btnPolice;
+    QPushButton* m_btnSpace;
+    QPushButton* m_btnApple;
     QPushButton* m_btnExit;
 
     // 2. 游戏内通用元素 (HUD)

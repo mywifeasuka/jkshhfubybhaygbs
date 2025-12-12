@@ -36,6 +36,9 @@ set(PROJECT_SOURCES
     policegame.h
     policegame.cpp 
     molegame.cpp
+    spacegame.cpp
+    datamanager.cpp
+    applegame.cpp
 )
 
 set(PROJECT_RESOURCES

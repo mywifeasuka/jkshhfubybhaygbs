@@ -1,4 +1,4 @@
-#include "datamanager.h"
+ï»¿#include "datamanager.h"
 #include <QDir>
 #include <QFile>
 #include <QTextStream>
@@ -9,42 +9,42 @@
 void DataManager::loadArticlesFromDir(const QString& dirPath) {
     m_articles.clear();
     QDir dir(dirPath);
-
-    // ¹ıÂË .txt ÎÄ¼ş
+    
+    // è¿‡æ»¤ .txt æ–‡ä»¶
     QStringList filters;
     filters << "*.txt";
     dir.setNameFilters(filters);
 
     QFileInfoList fileList = dir.entryInfoList();
-
-    // ÎªÁË¼æÈİ¾É°æÖĞÎÄWindowsÉú³ÉµÄtxt£¬³¢ÊÔÊ¹ÓÃ GBK
-    // Qt5 ĞèÒª #include <QTextCodec>£¬Qt6 Ôò²»Í¬
-    QTextCodec* codec = QTextCodec::codecForName("GBK");
+    
+    // ä¸ºäº†å…¼å®¹æ—§ç‰ˆä¸­æ–‡Windowsç”Ÿæˆçš„txtï¼Œå°è¯•ä½¿ç”¨ GBK
+    // Qt5 éœ€è¦ #include <QTextCodec>ï¼ŒQt6 åˆ™ä¸åŒ
+    QTextCodec *codec = QTextCodec::codecForName("GBK"); 
     if (!codec) codec = QTextCodec::codecForName("UTF-8");
 
     for (const QFileInfo& fileInfo : fileList) {
         QFile file(fileInfo.absoluteFilePath());
         if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
             QByteArray data = file.readAll();
-            // ×ª»»Îª Unicode
+            // è½¬æ¢ä¸º Unicode
             QString content = codec->toUnicode(data);
-
-            // ¼òµ¥µÄÇåÏ´£ºÈ¥µô¹ı¶àµÄ»»ĞĞ·û£¬±ä³ÉÒ»ĞĞ»òÕß¼¸ĞĞ
+            
+            // ç®€å•çš„æ¸…æ´—ï¼šå»æ‰è¿‡å¤šçš„æ¢è¡Œç¬¦ï¼Œå˜æˆä¸€è¡Œæˆ–è€…å‡ è¡Œ
             content = content.replace("\r\n", " ").replace("\n", " ").simplified();
-
+            
             if (!content.isEmpty()) {
                 m_articles.append(content);
             }
             file.close();
         }
     }
-
-    // Èç¹ûÃ»¶Áµ½ÎÄ¼ş£¬¼Ó¼¸¸öÄ¬ÈÏµÄ±£µ×
+    
+    // å¦‚æœæ²¡è¯»åˆ°æ–‡ä»¶ï¼ŒåŠ å‡ ä¸ªé»˜è®¤çš„ä¿åº•
     if (m_articles.isEmpty()) {
         m_articles << "Technology is best when it brings people together.";
         m_articles << "The art of programming is the art of organizing complexity.";
     }
-
+    
     qDebug() << "Loaded" << m_articles.size() << "articles from" << dirPath;
 }
 
