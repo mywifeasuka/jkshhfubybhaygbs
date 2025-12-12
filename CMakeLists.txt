@@ -35,10 +35,16 @@ set(PROJECT_SOURCES
     gamebase.h
     policegame.h
     policegame.cpp 
+    molegame.h
     molegame.cpp
+    spacegame.h
     spacegame.cpp
+    datamanager.h
     datamanager.cpp
+    applegame.h
     applegame.cpp
+    froggame.h
+    froggame.cpp
 )
 
 set(PROJECT_RESOURCES

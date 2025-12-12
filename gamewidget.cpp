@@ -18,6 +18,7 @@ GameWidget::GameWidget(QWidget* parent)
     m_policeGame = new PoliceGame(this);
     m_spaceGame = new SpaceGame(this);
     m_appleGame = new AppleGame(this);
+    m_frogGame = new FrogGame(this);
 
     // 2. 初始化设置窗口
     m_settingsDialog = new GameSettings(this);
@@ -56,6 +57,10 @@ void GameWidget::setupMainMenu() {
     m_btnApple = new QPushButton(QStringLiteral("拯救苹果"), this);
     m_btnApple->setGeometry(300, 320, 200, 50); 
     connect(m_btnApple, &QPushButton::clicked, this, &GameWidget::onSelectAppleGame);
+
+    m_btnFrog = new QPushButton(QStringLiteral("激流勇进"), this);
+    m_btnFrog->setGeometry(300, 380, 200, 50); // 调整位置
+    connect(m_btnFrog, &QPushButton::clicked, this, &GameWidget::onSelectFrogGame);
 
     m_btnExit = new QPushButton(QStringLiteral("退出程序"), this);
     m_btnExit->setGeometry(300, 440, 200, 50);
@@ -100,6 +105,7 @@ void GameWidget::onReturnToMenu() {
     m_btnPolice->show();
     m_btnSpace->show();
     m_btnApple->show();
+    m_btnFrog->show();
     m_btnExit->show();
 
     // 隐藏游戏控件
@@ -125,6 +131,7 @@ void GameWidget::switchToGame(GameBase* game) {
     m_btnPolice->hide();
     m_btnSpace->hide();
     m_btnApple->hide();
+    m_btnFrog->hide();
     m_btnExit->hide();
 
     // 显示游戏控件
@@ -156,6 +163,10 @@ void GameWidget::onSelectSpaceGame() {
 
 void GameWidget::onSelectAppleGame() {
     switchToGame(m_appleGame);
+}
+
+void GameWidget::onSelectFrogGame() {
+    switchToGame(m_frogGame);
 }
 
 void GameWidget::onStartGame() {

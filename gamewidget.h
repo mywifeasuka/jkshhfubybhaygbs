@@ -13,6 +13,7 @@
 #include "policegame.h"
 #include "spacegame.h"
 #include "applegame.h"
+#include "froggame.h"
 
 class GameWidget : public QWidget {
     Q_OBJECT
@@ -31,6 +32,7 @@ private slots:
     void onSelectPoliceGame();
     void onSelectSpaceGame();
     void onSelectAppleGame();
+    void onSelectFrogGame();
     void onExitApp();
     
     // 游戏内按钮槽
@@ -63,6 +65,7 @@ private:
     PoliceGame* m_policeGame;
     SpaceGame* m_spaceGame;
     AppleGame* m_appleGame;
+    FrogGame* m_frogGame;
 
     // --- UI 元素 ---
     // 1. 主菜单元素
@@ -71,6 +74,7 @@ private:
     QPushButton* m_btnPolice;
     QPushButton* m_btnSpace;
     QPushButton* m_btnApple;
+    QPushButton* m_btnFrog;
     QPushButton* m_btnExit;
 
     // 2. 游戏内通用元素 (HUD)
