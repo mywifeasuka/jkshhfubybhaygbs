@@ -434,6 +434,9 @@ void GameWidget::onGameFinished(int score, bool win) {
     if (dynamic_cast<AppleGame*>(m_currentGame)) {
         theme = GameResultDialog::Theme_Apple;
     }
+    else if (dynamic_cast<FrogGame*>(m_currentGame)) {
+        theme = GameResultDialog::Theme_Frog; 
+    }
 
     // 创建对话框并传入主题
     GameResultDialog dlg(theme, this);

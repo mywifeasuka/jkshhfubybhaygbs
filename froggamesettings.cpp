@@ -43,7 +43,7 @@ void FrogGameSettings::setupUI() {
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     // 【修改点 1】调整布局边距，对齐其他设置界面
     // 之前是 180, 80... 现在改回标准的 120, 60... 
-    mainLayout->setContentsMargins(120, 60, 40, 30);
+    mainLayout->setContentsMargins(150, 100, 40, 30);
     mainLayout->setSpacing(20);
 
     QFormLayout* formLayout = new QFormLayout();

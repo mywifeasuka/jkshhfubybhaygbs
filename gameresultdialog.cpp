@@ -11,12 +11,17 @@ GameResultDialog::GameResultDialog(GameTheme theme, QWidget* parent)
     setAttribute(Qt::WA_TranslucentBackground);
 
     // 1. 根据主题加载背景
+    QString bgPath;
     if (m_currentTheme == Theme_Apple) {
-        m_bgPixmap.load(":/img/apple_dlg_bg.png"); // 苹果背景
+        bgPath = ":/img/apple_dlg_bg.png";
+    }
+    else if (m_currentTheme == Theme_Frog) {
+        bgPath = ":/img/frog_dlg_bg.png"; // 【新增】
     }
     else {
-        m_bgPixmap.load(":/img/mole_dlg_bg.bmp");  // 默认为鼠背景
+        bgPath = ":/img/mole_dlg_bg.bmp";
     }
+    m_bgPixmap.load(bgPath);
 
     if (!m_bgPixmap.isNull()) {
         setFixedSize(m_bgPixmap.size());
@@ -53,17 +58,28 @@ void GameResultDialog::setupUI() {
 
     // 定义资源基础路径
     QString replayBase, nextBase, endBase;
-    QString suffix; // 后缀名 (.bmp 或 .png)
+    QString suffix;
 
     if (m_currentTheme == Theme_Apple) {
-        // 苹果主题资源
         replayBase = ":/img/apple_dlg_replay";
         nextBase = ":/img/apple_dlg_next";
         endBase = ":/img/apple_dlg_end";
         suffix = ".png";
     }
+    else if (m_currentTheme == Theme_Frog) {
+        // 【新增】激流勇进资源
+        replayBase = ":/img/frog_dlg_replay";
+        nextBase = ":/img/frog_dlg_next"; // 注意：虽然只有成功界面，但可能仍需要“下一关”或“重玩”
+        endBase = ":/img/frog_end";      // 或者是 frog_dlg_end
+        suffix = ".png";
+
+        // 修正：根据资源列表，激流勇进的按钮似乎没有统一的 dlg 前缀？
+        // 让我们检查资源... 
+        // 资源列表中有 frog_dlg_replay.png, frog_dlg_next.png, frog_dlg_end.png
+        // 确认无误。
+        endBase = ":/img/frog_dlg_end";
+    }
     else {
-        // 鼠主题资源
         replayBase = ":/img/mole_dlg_replay";
         nextBase = ":/img/mole_dlg_next";
         endBase = ":/img/mole_dlg_end";

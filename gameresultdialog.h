@@ -12,7 +12,8 @@ public:
     // 游戏主题类型
     enum GameTheme {
         Theme_Mole,
-        Theme_Apple
+        Theme_Apple,
+        Theme_Frog
     };
 
     enum ResultAction {

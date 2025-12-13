@@ -41,6 +41,7 @@ private slots:
 private:
     void spawnLeaves();
     void resetFrog();           // 重置青蛙位置（准备下一只）
+    void retreatFrog();
     void checkInput(const QString& key); // 修改：接收字符进行判定
     void loadDictionary(const QString& filename);
 

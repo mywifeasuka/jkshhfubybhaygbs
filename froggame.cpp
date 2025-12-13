@@ -63,6 +63,56 @@ void FrogGame::updateSettings(const FrogSettingsData& settings) {
     loadDictionary(m_settings.dictionaryFile);
 }
 
+void FrogGame::retreatFrog() {
+    // 逻辑：回到上一行
+    // Row 2 -> Row 1 (最新)
+    // Row 1 -> Row 0 (最新)
+    // Row 0 -> Bank (-1)
+
+    int targetRow = m_currentRow - 1;
+
+    if (targetRow < 0) {
+        // 回到岸边
+        m_currentRow = -1;
+        m_currentLeaf = nullptr;
+        m_frogPos = QPointF(SCREEN_WIDTH / 2, START_BANK_Y);
+        // 输入缓冲清空
+        m_inputBuffer.clear();
+        m_lockedLeaf = nullptr;
+        return;
+    }
+
+    // 寻找 targetRow 中“最新生成”的荷叶
+    // 由于 m_leaves 是 append 的，最新的在列表末尾
+    LotusLeaf* targetLeaf = nullptr;
+
+    for (int i = m_leaves.size() - 1; i >= 0; --i) {
+        if (m_leaves[i]->row == targetRow) {
+            // 还需要确保它在屏幕内，或者至少青蛙能站上去
+            targetLeaf = m_leaves[i];
+            break; // 找到最新的一个就停止
+        }
+    }
+
+    if (targetLeaf) {
+        m_currentRow = targetRow;
+        m_currentLeaf = targetLeaf;
+        m_frogPos.setX(targetLeaf->x);
+        m_frogPos.setY(ROW_Y[targetRow]);
+        // 重置锁定状态，因为换了荷叶
+        m_inputBuffer.clear();
+        m_lockedLeaf = nullptr;
+    }
+    else {
+        // 极端情况：上一排居然没叶子？那只能回岸边了
+        m_currentRow = -1;
+        m_currentLeaf = nullptr;
+        m_frogPos = QPointF(SCREEN_WIDTH / 2, START_BANK_Y);
+        m_inputBuffer.clear();
+        m_lockedLeaf = nullptr;
+    }
+}
+
 void FrogGame::loadDictionary(const QString& filename) {
     QString path = QCoreApplication::applicationDirPath() + "/Data/English/T_WORD/Dictionary/" + filename;
     QFile file(path);
@@ -95,9 +145,6 @@ void FrogGame::loadDictionary(const QString& filename) {
 void FrogGame::initGame() {
     m_state = GameState::Ready;
     m_score = 0;
-
-    // 【修改点】总共5只青蛙，全部跑完（无论生死）游戏结束
-    m_frogsRemaining = 5;
 
     m_successCount = 0;
 
@@ -180,23 +227,13 @@ void FrogGame::onGameTick() {
         LotusLeaf* leaf = *it;
         leaf->x += leaf->speed;
 
-        // 移除屏幕外荷叶
         if (leaf->x < -200 || leaf->x > SCREEN_WIDTH + 200) {
-            // 死亡判定
+            // 【修改点】荷叶出界
             if (m_currentLeaf == leaf) {
-                m_frogsRemaining--; // 消耗一只青蛙
-                m_splashSound->play();
-
-                if (m_frogsRemaining > 0) {
-                    resetFrog(); // 下一只
-                }
-                else {
-                    stopGame();
-                    emit gameFinished(m_score, false); // 游戏结束
-                }
-
-                // 注意：如果重置了青蛙，m_currentLeaf 会置空，下面的逻辑安全
-                // 但要小心不要再次 delete
+                // 青蛙在上面 -> 触发撤退
+                m_splashSound->play(); // 可以换个“惊吓”音效
+                retreatFrog(); // 回到上一步
+                // 注意：retreatFrog 内部已经把 m_currentLeaf 指向别的了
             }
 
             // 如果锁定的荷叶出去了，解锁
@@ -266,43 +303,40 @@ void FrogGame::pauseGame() {
 
 // 【重写】输入判定与锁定逻辑
 void FrogGame::checkInput(const QString& key) {
-    // 目标行
     int targetRow = m_currentRow + 1;
 
-    // --- 1. 如果已经锁定目标 ---
+    // 1. 锁定状态处理 (保持不变)
     if (m_isGoalLocked) {
-        // 检查终点单词的下一个字母
+        // ... (原代码保持不变) ...
         int nextIdx = m_inputBuffer.length();
         if (nextIdx < m_goalWord.length() && m_goalWord.at(nextIdx) == key.at(0)) {
             m_inputBuffer += key;
-            // 检查是否完成
             if (m_inputBuffer == m_goalWord) {
                 m_successSound->play();
                 m_score += 500;
                 m_successCount++;
-                m_frogsRemaining--; // 消耗一只（成功）
                 emit scoreChanged(m_score);
 
-                if (m_frogsRemaining > 0) {
-                    resetFrog();
+                // 成功了一只，是否全部完成？
+                if (m_successCount >= 5) { // 总共5只
+                    stopGame();
+                    emit gameFinished(m_score, true); // 唯一的结算界面
                 }
                 else {
-                    stopGame();
-                    emit gameFinished(m_score, true); // 全员结束，算作胜利
+                    resetFrog(); // 下一只
                 }
             }
         }
-        return; // 锁定了就不看其他的了，输错也无视
+        return;
     }
 
     if (m_lockedLeaf) {
-        // 检查锁定荷叶的下一个字母
+        // ... (原代码保持不变) ...
         int nextIdx = m_inputBuffer.length();
         if (nextIdx < m_lockedLeaf->word.length() && m_lockedLeaf->word.at(nextIdx) == key.at(0)) {
             m_inputBuffer += key;
-            // 检查是否完成
             if (m_inputBuffer == m_lockedLeaf->word) {
-                // 跳跃！
+                // Jump!
                 m_currentRow = m_lockedLeaf->row;
                 m_currentLeaf = m_lockedLeaf;
                 m_frogPos.setX(m_currentLeaf->x);
@@ -312,46 +346,44 @@ void FrogGame::checkInput(const QString& key) {
                 m_jumpSound->play();
                 emit scoreChanged(m_score);
 
-                // 跳跃后重置输入和锁定
                 m_inputBuffer.clear();
                 m_lockedLeaf = nullptr;
-            }
-        }
-        return; // 锁定了就不看其他的了
-    }
-
-    // --- 2. 如果未锁定，寻找新目标 ---
-
-    // Case A: 目标是终点 (Row 3)
-    if (targetRow == 3) {
-        if (m_goalWord.startsWith(key)) {
-            m_isGoalLocked = true; // 锁定终点
-            m_inputBuffer += key;
-            // 特殊情况：单词只有一个字母
-            if (m_inputBuffer == m_goalWord) {
-                m_successSound->play();
-                m_score += 500;
-                m_successCount++;
-                m_frogsRemaining--;
-                emit scoreChanged(m_score);
-
-                if (m_frogsRemaining > 0) resetFrog();
-                else { stopGame(); emit gameFinished(m_score, true); }
             }
         }
         return;
     }
 
-    // Case B: 目标是下一排荷叶
-    for (LotusLeaf* leaf : m_leaves) {
-        // 只检查下一排，且在屏幕内的
+    // 2. 未锁定状态 - 寻找目标
+
+    // Case A: 终点 (Row 3)
+    if (targetRow == 3) {
+        if (m_goalWord.startsWith(key)) {
+            m_isGoalLocked = true;
+            m_inputBuffer += key;
+            if (m_inputBuffer == m_goalWord) {
+                // Instant win logic...
+                m_successSound->play();
+                m_score += 500;
+                m_successCount++;
+                emit scoreChanged(m_score);
+                if (m_successCount >= 5) { stopGame(); emit gameFinished(m_score, true); }
+                else resetFrog();
+            }
+        }
+        return;
+    }
+
+    // Case B: 下一排荷叶 (修改为倒序遍历)
+    // 【修改点】从后往前遍历，实现“优先绑定后生成的单词”
+    for (int i = m_leaves.size() - 1; i >= 0; --i) {
+        LotusLeaf* leaf = m_leaves[i];
+
         if (leaf->row == targetRow && leaf->x > 50 && leaf->x < SCREEN_WIDTH - 50) {
-            // 匹配第一个字母
             if (leaf->word.startsWith(key)) {
-                m_lockedLeaf = leaf; // 锁定该荷叶
+                m_lockedLeaf = leaf; // 锁定
                 m_inputBuffer += key;
-                // 特殊情况：单词只有一个字母
                 if (m_inputBuffer == leaf->word) {
+                    // Instant jump logic...
                     m_currentRow = leaf->row;
                     m_currentLeaf = leaf;
                     m_frogPos.setX(leaf->x);
@@ -362,7 +394,7 @@ void FrogGame::checkInput(const QString& key) {
                     m_inputBuffer.clear();
                     m_lockedLeaf = nullptr;
                 }
-                return; // 找到一个即锁定并返回
+                return;
             }
         }
     }
@@ -455,7 +487,9 @@ void FrogGame::draw(QPainter& painter) {
     // 绘制剩余青蛙（岸边等待）
     // 注意：m_frogsRemaining 包含当前正在跳的这一只。
     // 所以岸边等待的数量是 m_frogsRemaining - 1
-    int waitingFrogs = m_frogsRemaining - 1;
+    int waitingFrogs = 5 - m_successCount - 1;
+    if (waitingFrogs < 0) waitingFrogs = 0; // 保护一下
+
     for (int i = 0; i < waitingFrogs; ++i) {
         int fx = SCREEN_WIDTH - 40 - (i * 35);
         int fy = SCREEN_HEIGHT - 40;
