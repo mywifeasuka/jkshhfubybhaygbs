@@ -181,6 +181,35 @@ void GameWidget::switchToGame(GameBase* game) {
     m_btnSettings->show();
     m_btnQuitGame->show();
 
+    if (game == m_moleGame) {
+        m_btnEnd->move(450, 480);
+        m_btnPause->move(400, 510);
+        m_btnStart->move(490, 530);
+        m_btnSettings->move(440, 550);
+        m_btnQuitGame->move(40, 550); // 左下角退出
+    }
+    else if (game == m_appleGame) {   
+        m_btnEnd->move(160, 480);
+        m_btnPause->move(120, 510);
+        m_btnStart->move(200, 530);
+        m_btnSettings->move(150, 550);
+        m_btnQuitGame->move(20, 550);  
+    }
+    else if (game == m_spaceGame) {
+        // --- 太空大战 ---
+        // 如果太空大战按钮位置也不同，在这里设置
+        m_btnStart->move(680, 400);
+        // ...
+    }
+    // 默认情况 (其他游戏如果没有特殊设置，可以沿用鼠的故事或者保持不动)
+    else {
+        m_btnEnd->move(450, 480);
+        m_btnPause->move(400, 510);
+        m_btnStart->move(490, 530);
+        m_btnSettings->move(440, 550);
+        m_btnQuitGame->move(40, 550);
+    }
+
     // 初始化游戏
     m_currentGame->initGame();
 
