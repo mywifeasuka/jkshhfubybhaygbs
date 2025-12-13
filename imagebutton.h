@@ -17,6 +17,10 @@ public:
         const QString& pressedPath,
         QWidget* parent = nullptr);
 
+    void loadImages(const QString& normalPath,
+        const QString& hoverPath,
+        const QString& pressedPath);
+
     void setFixedSizeToPixmap();
 
 signals:

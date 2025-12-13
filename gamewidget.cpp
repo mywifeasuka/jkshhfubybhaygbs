@@ -182,34 +182,61 @@ void GameWidget::switchToGame(GameBase* game) {
     m_btnSettings->show();
     m_btnQuitGame->show();
 
-    if (game == m_moleGame) {
-        m_btnEnd->move(450, 480);
-        m_btnPause->move(400, 510);
-        m_btnStart->move(490, 530);
-        m_btnSettings->move(440, 550);
-        m_btnQuitGame->move(40, 550); // 左下角退出
-    }
-    else if (game == m_appleGame) {   
-        m_btnEnd->move(160, 480);
+    if (game == m_frogGame) {
+        // 激流勇进
+
+        // 切换为青蛙专属皮肤 
+        // 如果你有对应的 hover 资源，请替换第二个和第三个参数
+        m_btnStart->loadImages(":/img/frog_start.png", ":/img/frog_start_hover.png", ":/img/frog_start_pressed.png");
+        m_btnPause->loadImages(":/img/frog_pause.png", ":/img/frog_pause_hover.png", ":/img/frog_pause_pressed.png");
+        m_btnEnd->loadImages(":/img/frog_end.png", ":/img/frog_end_hover.png", ":/img/frog_end_pressed.png");
+        m_btnSettings->loadImages(":/img/frog_setting.png", ":/img/frog_setting_hover.png", ":/img/frog_setting_pressed.png");
+        m_btnQuitGame->loadImages(":/img/frog_exit.png", ":/img/frog_exit_hover.png", ":/img/frog_exit_pressed.png");
+
+        // 调整坐标
+        m_btnStart->move(160, 480);
         m_btnPause->move(120, 510);
-        m_btnStart->move(200, 530);
+        m_btnEnd->move(200, 530);
         m_btnSettings->move(150, 550);
-        m_btnQuitGame->move(20, 550);  
+        m_btnQuitGame->move(20, 550);
     }
-    else if (game == m_spaceGame) {
-        // --- 太空大战 ---
-        // 如果太空大战按钮位置也不同，在这里设置
-        m_btnStart->move(680, 400);
-        // ...
-    }
-    // 默认情况 (其他游戏如果没有特殊设置，可以沿用鼠的故事或者保持不动)
     else {
-        m_btnEnd->move(450, 480);
-        m_btnPause->move(400, 510);
-        m_btnStart->move(490, 530);
-        m_btnSettings->move(440, 550);
-        m_btnQuitGame->move(40, 550);
+        //其他游戏
+
+        // 1. 恢复为通用灰色皮肤 (.bmp)
+        m_btnStart->loadImages(":/img/public_start.bmp", ":/img/public_start_on.bmp", ":/img/public_start_clicked.bmp");
+        m_btnPause->loadImages(":/img/public_pause.bmp", ":/img/public_pause_on.bmp", ":/img/public_pause_clicked.bmp");
+        m_btnEnd->loadImages(":/img/public_end.bmp", ":/img/public_end_on.bmp", ":/img/public_end_clicked.bmp");
+        m_btnSettings->loadImages(":/img/public_settings.bmp", ":/img/public_settings_on.bmp", ":/img/public_settings_clicked.bmp");
+        m_btnQuitGame->loadImages(":/img/public_exit.bmp", ":/img/public_exit_on.bmp", ":/img/public_exit_clicked.bmp");
+
+        // 调整坐标
+        if (game == m_moleGame) {
+            // 鼠的故事
+            m_btnEnd->move(450, 480);
+            m_btnPause->move(400, 510);
+            m_btnStart->move(490, 530);
+            m_btnSettings->move(440, 550);
+            m_btnQuitGame->move(40, 550);
+        }
+        else if (game == m_appleGame) {
+            // 拯救苹果
+            m_btnStart->move(160, 480);
+            m_btnPause->move(120, 510);
+            m_btnEnd->move(200, 530);
+            m_btnSettings->move(150, 550);
+            m_btnQuitGame->move(20, 550);
+        }
+        else {
+            // 太空大战 / 生死时速 (默认)
+            m_btnEnd->move(450, 480);
+            m_btnPause->move(400, 510);
+            m_btnStart->move(490, 530);
+            m_btnSettings->move(440, 550);
+            m_btnQuitGame->move(40, 550);
+        }
     }
+
 
     // 初始化游戏
     m_currentGame->initGame();

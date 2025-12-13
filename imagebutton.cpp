@@ -16,6 +16,15 @@ ImageButton::ImageButton(const QString& normalPath,
     setCursor(Qt::PointingHandCursor);
 }
 
+void ImageButton::loadImages(const QString& normalPath, const QString& hoverPath, const QString& pressedPath) {
+    normalPixmap.load(normalPath);
+    hoverPixmap.load(hoverPath);
+    pressedPixmap.load(pressedPath);
+
+    // 刷新当前显示
+    update();
+}
+
 void ImageButton::setFixedSizeToPixmap() {
     if (!normalPixmap.isNull()) {
         setFixedSize(normalPixmap.size());

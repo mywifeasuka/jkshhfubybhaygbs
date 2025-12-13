@@ -306,7 +306,7 @@ void FrogGame::draw(QPainter& painter) {
         bool isTarget = (leaf->row == m_currentRow + 1) && leaf->word.startsWith(m_inputBuffer);
 
         // 微调文字高度，使其视觉居中
-        int textY = ROW_Y[leaf->row] + 6;
+        int textY = ROW_Y[leaf->row] - 20;
 
         if (isTarget && !m_inputBuffer.isEmpty()) {
             QFontMetrics fm(painter.font());
@@ -317,14 +317,14 @@ void FrogGame::draw(QPainter& painter) {
             painter.setPen(Qt::yellow);
             painter.drawText(startX, textY, m_inputBuffer);
 
-            // 未输入 (白色)
+            // 未输入
             int typedW = fm.horizontalAdvance(m_inputBuffer);
-            painter.setPen(Qt::white);
+            painter.setPen(Qt::black);
             painter.drawText(startX + typedW, textY, leaf->word.mid(m_inputBuffer.length()));
         }
         else {
-            // 普通状态 (白色)
-            painter.setPen(Qt::white);
+            // 普通状态
+            painter.setPen(Qt::black);
             // 直接居中绘制
             QRect textRect(leaf->x - 60, ROW_Y[leaf->row] - 20, 120, 40);
             painter.drawText(textRect, Qt::AlignCenter, leaf->word);
