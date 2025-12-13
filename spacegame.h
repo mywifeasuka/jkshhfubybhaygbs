@@ -22,7 +22,7 @@ struct SpaceEntity {
     QPointF velocity;
     double initialX;
     QString letter;       // 敌机显示的字母
-    QString targetLetter; // 【新增】子弹追踪的目标字母
+    QString targetLetter; // 子弹追踪的目标字母
     int lifeTime;
     bool active;
 
@@ -61,11 +61,11 @@ private slots:
 
 private:
     void spawnEnemy();
-    // 【修改】生成子弹时传入目标字母
+    // 生成子弹时传入目标字母
     void spawnBullet(const QPointF& startPos, const QString& targetLetter);
     void createExplosion(const QPointF& pos);
 
-    // 【修改】返回 bool，true 表示游戏结束
+    // 返回 bool，true 表示游戏结束
     bool checkCollisions();
 
     void drawHUD(QPainter& painter);

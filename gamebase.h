@@ -21,7 +21,6 @@ public:
     explicit GameBase(QObject *parent = nullptr) : QObject(parent), m_state(GameState::Ready) {}
     virtual ~GameBase() {}
 
-    // 必须由子类实现的接口
     virtual void initGame() = 0;              // 初始化/重置游戏
     virtual void startGame() = 0;             // 开始
     virtual void pauseGame() = 0;             // 暂停/继续

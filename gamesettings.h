@@ -6,7 +6,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QMouseEvent>
-#include "imagebutton.h" // 引用你之前实现的 ImageButton
+#include "imagebutton.h" 
 
 struct GameSettingsData {
     int gameTimeSec = 60;
@@ -25,9 +25,7 @@ public:
     GameSettingsData getSettings() const;
 
 protected:
-    // 重写绘图事件以绘制背景
     void paintEvent(QPaintEvent* event) override;
-    // 重写鼠标事件以支持拖拽
     void mousePressEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
 
@@ -50,7 +48,6 @@ private:
     QLabel* spawnIntervalLabel;
     QLabel* stayTimeLabel;
 
-    // 改用 ImageButton
     ImageButton* okButton;
     ImageButton* cancelButton;
     ImageButton* defaultButton;

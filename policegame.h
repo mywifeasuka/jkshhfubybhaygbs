@@ -24,7 +24,7 @@ private slots:
     void onGameTick();
 
 private:
-    void initMapPath();   // 初始化你提供的地图路径
+    void initMapPath();   
     void loadResources(); // 加载多方向贴图
     void loadArticle();//加载文章
 

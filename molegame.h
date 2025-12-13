@@ -33,10 +33,9 @@ private slots:
     void onMoleEscaped();
 
 private:
-    void maintainMoleCount(); // 【新增】维持场上地鼠数量
+    void maintainMoleCount(); // 维持场上地鼠数量
     void checkGameOver();
 
-    // ... 其他成员变量保持不变 ...
     QPixmap m_backgroundPixmap;
     QPixmap m_carrotPixmap;
     QVector<Mole*> m_moles;

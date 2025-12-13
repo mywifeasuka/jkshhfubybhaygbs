@@ -9,7 +9,7 @@
 #include <QPainter>
 #include "imagebutton.h"
 
-// 【新增】自定义图片复选框类
+// 自定义图片复选框类
 // 支持4种状态：
 // 0: 未选中 (Normal)
 // 1: 未选中悬停 (Hover) -> _1
@@ -74,7 +74,7 @@ private:
     QSlider* m_sliderDiff;
     QSlider* m_sliderLives;
 
-    // 【修改】使用自定义控件
+    // 使用自定义控件
     ImageCheckBox* m_checkBonus;
     QLabel* m_labelBonusDesc; // 说明文字
 
