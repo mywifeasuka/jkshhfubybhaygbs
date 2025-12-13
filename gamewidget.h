@@ -39,6 +39,7 @@ private slots:
     void onStartGame();
     void onPauseGame();
     void onReturnToMenu(); // 返回主菜单
+    void onStopGameRound(); // 对应控制面板结束
     void onShowSettings();
 
     // 游戏反馈槽
@@ -81,7 +82,8 @@ private:
     ImageButton* m_btnStart;
     ImageButton* m_btnPause;
     ImageButton* m_btnSettings;
-    ImageButton* m_btnBack; // 返回主菜单
+    ImageButton* m_btnEnd; // 返回主菜单
+    ImageButton* m_btnQuitGame;
     
     GameSettings* m_settingsDialog;
 
