@@ -14,6 +14,8 @@ ImageButton::ImageButton(const QString& normalPath,
 
     setFixedSizeToPixmap();
     setCursor(Qt::PointingHandCursor);
+
+    setFocusPolicy(Qt::NoFocus);
 }
 
 void ImageButton::loadImages(const QString& normalPath, const QString& hoverPath, const QString& pressedPath) {
