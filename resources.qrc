@@ -18,8 +18,14 @@
     <file alias="img/background.bmp">img/MOLE_BACKGROUND.BMP</file>
     <file alias="img/mole_dlg_bg.bmp">img/MOLE_DLG_BG.bmp</file>
     <file alias="img/mole_dlg_end.bmp">img/MOLE_DLG_END.bmp</file>
+	<file alias="img/mole_dlg_end_hover.bmp">img/MOLE_DLG_END_hover.bmp</file>
+	<file alias="img/mole_dlg_end_pressed.bmp">img/MOLE_DLG_END_pressed.bmp</file>
     <file alias="img/mole_dlg_next.bmp">img/MOLE_DLG_NEXT.bmp</file>
+	<file alias="img/mole_dlg_next_hover.bmp">img/MOLE_DLG_NEXT_hover.bmp</file>
+	<file alias="img/mole_dlg_next_pressed.bmp">img/MOLE_DLG_NEXT_pressed.bmp</file>
     <file alias="img/mole_dlg_replay.bmp">img/MOLE_DLG_REPLAY.bmp</file>
+	<file alias="img/mole_dlg_replay_hover.bmp">img/MOLE_DLG_REPLAY_hover.bmp</file>
+	<file alias="img/mole_dlg_replay_pressed.bmp">img/MOLE_DLG_REPLAY_pressed.bmp</file>
     <file alias="img/mole_hide.bmp">img/MOLE_HIDE.bmp</file>
     <file alias="img/mole_hit.bmp">img/MOLE_HIT.bmp</file>
     <file alias="img/mole_normal.bmp">img/MOLE_NORMAL.bmp</file>

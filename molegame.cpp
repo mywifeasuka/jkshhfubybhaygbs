@@ -55,6 +55,14 @@ void MoleGame::updateSettings(const GameSettingsData &data) {
     m_settings = data;
 }
 
+void MoleGame::increaseDifficulty() {
+    m_settings.spawnIntervalMs = qMax(300, m_settings.spawnIntervalMs - 100);
+    m_settings.stayTimeMs = qMax(500, m_settings.stayTimeMs - 200);
+
+    // m_settings.gameTimeSec += 10; 
+}
+
+
 void MoleGame::initGame() {
     m_state = GameState::Ready;
     m_score = 0; // GameBase 成员

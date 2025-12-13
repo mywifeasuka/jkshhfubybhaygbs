@@ -24,8 +24,10 @@ public:
     void draw(QPainter &painter) override;
     void handleKeyPress(QKeyEvent *event) override;
 
-    // 设置相关（保留原逻辑）
+    // 设置相关
     void updateSettings(const GameSettingsData& data);
+
+    void increaseDifficulty(); // 提高难度
 
 private slots:
     void onGameTimerTick();

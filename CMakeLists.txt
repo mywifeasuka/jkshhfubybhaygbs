@@ -45,6 +45,8 @@ set(PROJECT_SOURCES
     applegame.cpp
     froggame.h
     froggame.cpp
+    gameresultdialog.cpp
+    gameresultdialog.h
 )
 
 set(PROJECT_RESOURCES
