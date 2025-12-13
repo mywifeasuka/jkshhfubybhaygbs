@@ -3,8 +3,12 @@
 <qresource prefix="/">
     <file alias="img/apple_setup.bmp">img/APPLE_SETUP.bmp</file>
     <file alias="img/cancel.bmp">img/CANCEL.bmp</file>
+	<file alias="img/cancel_hover.bmp">img/CANCEL_hover.bmp</file>
+	<file alias="img/cancel_pressed.bmp">img/CANCEL_pressed.bmp</file>
     <file alias="img/checkbox_button.bmp">img/CHECKBOX_BUTTON.bmp</file>
     <file alias="img/default.bmp">img/DEFAULT.bmp</file>
+	<file alias="img/default_pressed.bmp">img/DEFAULT_pressed.bmp</file>
+	<file alias="img/default_hover.bmp">img/DEFAULT_hover.bmp</file>
     <file alias="img/dropdown_button.bmp">img/DROPDOWN_BUTTON.bmp</file>
     <file alias="img/main_dlg_bg.bmp">img/MAIN_DLG_BG.bmp</file>
     <file alias="img/main_dlg_exit.bmp">img/MAIN_DLG_EXIT.bmp</file>
@@ -23,6 +27,8 @@
     <file alias="img/mole_setup.bmp">img/MOLE_SETUP.bmp</file>
     <file alias="img/no.bmp">img/NO.bmp</file>
     <file alias="img/ok.bmp">img/OK.bmp</file>
+	<file alias="img/ok_hover.bmp">img/OK_hover.bmp</file>
+	<file alias="img/ok_pressed.bmp">img/OK_pressed.bmp</file>
     <file alias="img/public_end.bmp">img/PUBLIC_END.bmp</file>
     <file alias="img/public_end_on.bmp">img/PUBLIC_END_on.bmp</file>
     <file alias="img/public_end_clicked.bmp">img/PUBLIC_END_clicked.bmp</file>
@@ -40,6 +46,7 @@
     <file alias="img/public_start_clicked.bmp">img/PUBLIC_START_clicked.bmp</file>
     <file alias="img/slider_bg.bmp">img/SLIDER_BG.bmp</file>
     <file alias="img/slider_slider.bmp">img/SLIDER_SLIDER.bmp</file>
+	<file alias="img/slider_slider_down.bmp">img/SLIDER_SLIDER_down.bmp</file>
     <file alias="img/yes.bmp">img/YES.bmp</file>
     
     <file alias="snd/anibtn_click.wav">snd/ANIBTN_CLICK.wav</file>
