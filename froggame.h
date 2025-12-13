@@ -2,18 +2,19 @@
 #define FROGGAME_H
 
 #include "gamebase.h"
+#include "froggamesettings.h" 
 #include <QPixmap>
 #include <QList>
 #include <QPointF>
 #include <QtMultimedia/QSoundEffect>
 
-// 荷叶实体
+
 struct LotusLeaf {
     int id;
-    int row;         // 所在的行 (0, 1, 2)
-    double x;        // X轴位置
-    double speed;    // 移动速度
-    QString word;    // 携带单词
+    int row;
+    double x;
+    double speed;
+    QString word;
 
     LotusLeaf(int r, double startX, double s, QString w)
         : row(r), x(startX), speed(s), word(w) {
@@ -33,6 +34,9 @@ public:
     void draw(QPainter& painter) override;
     void handleKeyPress(QKeyEvent* event) override;
 
+    // 更新设置
+    void updateSettings(const FrogSettingsData& settings);
+
 private slots:
     void onGameTick();
 
@@ -42,21 +46,23 @@ private:
     void resetFrog();
     void checkInput();
 
-    // --- 资源 ---
+    // 加载词库文件
+    void loadDictionary(const QString& filename);
+
+    // 资源 
     QPixmap m_bgPixmap;
     QPixmap m_frogPixmap;
     QPixmap m_leafPixmap;
-    // Removed m_bankPixmap (背景图已包含)
 
-    // --- 音效 ---
+    // 音效
     QSoundEffect* m_jumpSound;
     QSoundEffect* m_bgMusic;
     QSoundEffect* m_splashSound;
     QSoundEffect* m_successSound;
 
-    // --- 游戏数据 ---
+    //游戏数据 
     QList<LotusLeaf*> m_leaves;
-    QStringList m_wordList;
+    QStringList m_wordList; // 当前词库
 
     int m_frogCount;
     int m_currentRow;
@@ -67,6 +73,9 @@ private:
     QString m_inputBuffer;
 
     QTimer* m_physicsTimer;
+
+    // 当前设置
+    FrogSettingsData m_settings;
 };
 
 #endif // FROGGAME_H

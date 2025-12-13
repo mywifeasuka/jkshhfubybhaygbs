@@ -8,6 +8,7 @@
 #include "gamesettings.h"
 #include "imagebutton.h"
 #include "applegamesettings.h"
+#include "froggamesettings.h"
 
 // 引入具体游戏类
 #include "molegame.h"
@@ -88,6 +89,7 @@ private:
     
     GameSettings* m_settingsDialog;
     AppleGameSettings* m_appleSettingsDialog;
+    FrogGameSettings* m_frogSettingsDialog;
 
     QTimer* m_renderTimer;
 };

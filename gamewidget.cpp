@@ -25,6 +25,7 @@ GameWidget::GameWidget(QWidget* parent)
     // 2. 初始化设置窗口
     m_settingsDialog = new GameSettings(this);
     m_appleSettingsDialog = new AppleGameSettings(this);
+    m_frogSettingsDialog = new FrogGameSettings(this);
 
     // 3. 初始化UI
     setupMainMenu();
@@ -352,7 +353,31 @@ void GameWidget::onShowSettings() {
         return;
     }
 
-    // 其他游戏暂无设置，什么都不做
+    FrogGame* frogGame = dynamic_cast<FrogGame*>(m_currentGame);
+    if (frogGame) {
+        FrogSettingsData oldSettings = m_frogSettingsDialog->getSettings();
+
+        if (m_frogSettingsDialog->exec() == QDialog::Accepted) {
+            FrogSettingsData newSettings = m_frogSettingsDialog->getSettings();
+
+            // 判断是否需要重启
+            bool changed = (oldSettings.difficulty != newSettings.difficulty) ||
+                (oldSettings.dictionaryFile != newSettings.dictionaryFile);
+
+            if (changed) {
+                ConfirmationDialog dlg(ConfirmationDialog::Mode_ApplySettings, this);
+                if (dlg.exec() == QDialog::Accepted) {
+                    frogGame->updateSettings(newSettings); // 传入设置
+                    frogGame->initGame(); // 重置游戏
+                    onStartGame();
+                }
+                else {
+                    frogGame->updateSettings(newSettings); // 仅更新参数
+                }
+            }
+        }
+        return;
+    }
 }
 
 void GameWidget::updateButtons() {
