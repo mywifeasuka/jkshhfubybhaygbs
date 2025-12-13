@@ -3,11 +3,87 @@
 #include <QHBoxLayout>
 #include <QFormLayout>
 #include <QPainter>
+#include <QDebug>
 
-// 【修改点 1】解决中文乱码
 #if defined(_MSC_VER) && (_MSC_VER >= 1600)
 #pragma execution_character_set("utf-8")
 #endif
+
+// ================= ImageCheckBox 实现 =================
+
+ImageCheckBox::ImageCheckBox(QWidget* parent)
+    : QWidget(parent), m_checked(false), m_isHover(false)
+{
+    setFixedSize(20, 20); // 默认大小，加载图片后会更新
+    setCursor(Qt::PointingHandCursor);
+}
+
+void ImageCheckBox::loadImages(const QString& basePath) {
+    // 假设资源后缀是 .bmp (根据原版资源习惯)
+    // 0: 初始 -> .bmp
+    m_pixmaps[0].load(basePath + ".bmp");
+    // 1: 移入 -> _1.bmp
+    m_pixmaps[1].load(basePath + "_1.bmp");
+    // 2: 选中 -> _2.bmp
+    m_pixmaps[2].load(basePath + "_2.bmp");
+    // 3: 选中移入 -> _3.bmp
+    m_pixmaps[3].load(basePath + "_3.bmp");
+
+    // 根据第一张图调整大小
+    if (!m_pixmaps[0].isNull()) {
+        setFixedSize(m_pixmaps[0].size());
+    }
+    update();
+}
+
+void ImageCheckBox::setChecked(bool checked) {
+    if (m_checked != checked) {
+        m_checked = checked;
+        emit stateChanged(m_checked);
+        update();
+    }
+}
+
+void ImageCheckBox::paintEvent(QPaintEvent*) {
+    QPainter painter(this);
+    int index = 0;
+
+    // 逻辑：0=关, 1=关hover, 2=开, 3=开hover
+    if (m_checked) {
+        index = m_isHover ? 3 : 2;
+    }
+    else {
+        index = m_isHover ? 1 : 0;
+    }
+
+    // 容错：如果对应的状态图不存在，回退到基础图(0)
+    if (m_pixmaps[index].isNull()) {
+        if (m_checked && !m_pixmaps[2].isNull()) index = 2;
+        else index = 0;
+    }
+
+    if (!m_pixmaps[index].isNull()) {
+        painter.drawPixmap(0, 0, m_pixmaps[index]);
+    }
+}
+
+void ImageCheckBox::enterEvent(QEvent*) {
+    m_isHover = true;
+    update();
+}
+
+void ImageCheckBox::leaveEvent(QEvent*) {
+    m_isHover = false;
+    update();
+}
+
+void ImageCheckBox::mousePressEvent(QMouseEvent* event) {
+    if (event->button() == Qt::LeftButton) {
+        setChecked(!m_checked); // 切换状态
+    }
+}
+
+// ================= SpaceGameSettings 实现 =================
 
 SpaceGameSettings::SpaceGameSettings(QWidget* parent) : QDialog(parent), m_isDragging(false) {
     setWindowFlags(Qt::FramelessWindowHint | Qt::Dialog);
@@ -29,21 +105,21 @@ SpaceGameSettings::SpaceGameSettings(QWidget* parent) : QDialog(parent), m_isDra
 
 void SpaceGameSettings::setupUI() {
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(120, 60, 40, 30);
-    mainLayout->setSpacing(15); //稍微调小间距以容纳更多选项
+    // 调整边距以适配背景图 (左, 上, 右, 下)
+    mainLayout->setContentsMargins(120, 50, 40, 20);
+    mainLayout->setSpacing(10);
 
     QFormLayout* formLayout = new QFormLayout();
     formLayout->setLabelAlignment(Qt::AlignRight);
     formLayout->setHorizontalSpacing(15);
-    formLayout->setVerticalSpacing(15);
+    formLayout->setVerticalSpacing(12);
 
     // 1. 难度
     m_sliderDiff = new QSlider(Qt::Horizontal);
     m_sliderDiff->setRange(1, 10);
     setupSliderStyle(m_sliderDiff);
     m_labelDiff = new QLabel("1");
-    m_labelDiff->setFixedWidth(50);
-    // 强制黑色字体
+    m_labelDiff->setFixedWidth(30);
     m_labelDiff->setStyleSheet("color: black; font-weight: bold;");
 
     QHBoxLayout* row1 = new QHBoxLayout();
@@ -59,7 +135,7 @@ void SpaceGameSettings::setupUI() {
     m_sliderLives->setRange(1, 5);
     setupSliderStyle(m_sliderLives);
     m_labelLives = new QLabel("3");
-    m_labelLives->setFixedWidth(50);
+    m_labelLives->setFixedWidth(30);
     m_labelLives->setStyleSheet("color: black; font-weight: bold;");
 
     QHBoxLayout* row2 = new QHBoxLayout();
@@ -70,20 +146,33 @@ void SpaceGameSettings::setupUI() {
     l2->setStyleSheet("font-family: 'SimSun'; font-size: 14px; font-weight: bold; color: #333;");
     formLayout->addRow(l2, row2);
 
-    // 3. 【新增】奖励模式
-    m_checkBonus = new QCheckBox("开启");
-    // 使用 QSS 美化 CheckBox，利用 checkbox_button.bmp
-    m_checkBonus->setStyleSheet(
-        "QCheckBox { color: black; font-weight: bold; }"
-        "QCheckBox::indicator { width: 20px; height: 20px; border: 1px solid gray; background: white; }"
-        "QCheckBox::indicator:checked { image: url(:/img/checkbox_button.bmp); }" // 选中时显示图片
-    );
+    // 3. 奖励模式 (ImageCheckBox)
+    QHBoxLayout* row3 = new QHBoxLayout();
+
+    m_checkBonus = new ImageCheckBox(this);
+    // 加载资源：checkbox_button.bmp, checkbox_button_1.bmp 等
+    m_checkBonus->loadImages(":/img/checkbox_button");
+
+    row3->addWidget(m_checkBonus);
+    row3->addStretch();
 
     QLabel* l3 = new QLabel("奖励模式:");
     l3->setStyleSheet("font-family: 'SimSun'; font-size: 14px; font-weight: bold; color: #333;");
-    formLayout->addRow(l3, m_checkBonus);
+    formLayout->addRow(l3, row3);
+
+    // 4. 奖励模式说明文字
+    // 插入一个单独的布局来显示说明，使其与复选框对齐
+    m_labelBonusDesc = new QLabel("选中此项，游戏过程中\n将出现加分奖励物体。", this);
+    m_labelBonusDesc->setStyleSheet("color: #666; font-size: 12px; font-family: 'SimSun';");
+
+    // 为了对齐，我们在左侧加一个 spacer，宽度等于Label宽度+间距
+    QHBoxLayout* descLayout = new QHBoxLayout();
+    descLayout->addSpacing(80); // 这里的80大概是 "奖励模式:" Label 的宽度
+    descLayout->addWidget(m_labelBonusDesc);
 
     mainLayout->addLayout(formLayout);
+    mainLayout->addLayout(descLayout); // 加在 FormLayout 下方
+
     mainLayout->addStretch();
 
     // 按钮
@@ -100,8 +189,6 @@ void SpaceGameSettings::setupUI() {
     btnLayout->addWidget(m_btnDefault);
     mainLayout->addLayout(btnLayout);
 }
-
-// ... setupSliderStyle, paintEvent, mouseEvents 保持不变 ...
 
 void SpaceGameSettings::setupSliderStyle(QSlider* slider) {
     slider->setStyleSheet(
@@ -133,7 +220,7 @@ void SpaceGameSettings::mouseMoveEvent(QMouseEvent* event) {
 void SpaceGameSettings::setSettings(const SpaceSettingsData& s) {
     m_sliderDiff->setValue(s.difficulty);
     m_sliderLives->setValue(s.lives);
-    m_checkBonus->setChecked(s.bonusMode); // 【新增】
+    m_checkBonus->setChecked(s.bonusMode);
     m_labelDiff->setText(QString::number(s.difficulty));
     m_labelLives->setText(QString::number(s.lives));
 }
@@ -142,7 +229,7 @@ SpaceSettingsData SpaceGameSettings::getSettings() const {
     SpaceSettingsData s;
     s.difficulty = m_sliderDiff->value();
     s.lives = m_sliderLives->value();
-    s.bonusMode = m_checkBonus->isChecked(); // 【新增】
+    s.bonusMode = m_checkBonus->isChecked();
     return s;
 }
 

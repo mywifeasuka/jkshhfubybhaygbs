@@ -4,14 +4,49 @@
 #include <QDialog>
 #include <QSlider>
 #include <QLabel>
-#include <QCheckBox> // 【新增】
+#include <QWidget>
 #include <QMouseEvent>
+#include <QPainter>
 #include "imagebutton.h"
 
+// 【新增】自定义图片复选框类
+// 支持4种状态：
+// 0: 未选中 (Normal)
+// 1: 未选中悬停 (Hover) -> _1
+// 2: 选中 (Checked) -> _2
+// 3: 选中悬停 (Checked Hover) -> _3
+class ImageCheckBox : public QWidget {
+    Q_OBJECT
+public:
+    explicit ImageCheckBox(QWidget* parent = nullptr);
+
+    // 加载四态图片
+    // basePath 例如 ":/img/checkbox"
+    // 会自动加载 basePath + ".bmp", basePath + "_1.bmp" 等
+    void loadImages(const QString& basePath);
+
+    bool isChecked() const { return m_checked; }
+    void setChecked(bool checked);
+
+signals:
+    void stateChanged(bool checked);
+
+protected:
+    void paintEvent(QPaintEvent* event) override;
+    void enterEvent(QEvent* event) override;
+    void leaveEvent(QEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+
+private:
+    bool m_checked;
+    bool m_isHover;
+    QPixmap m_pixmaps[4]; // 存储4张图
+};
+
 struct SpaceSettingsData {
-    int difficulty = 1; // 难度 1-10
-    int lives = 3;      // 初始生命 1-5
-    bool bonusMode = false; // 【新增】奖励模式开关
+    int difficulty = 1;
+    int lives = 3;
+    bool bonusMode = false;
 };
 
 class SpaceGameSettings : public QDialog {
@@ -19,7 +54,6 @@ class SpaceGameSettings : public QDialog {
 
 public:
     explicit SpaceGameSettings(QWidget* parent = nullptr);
-
     void setSettings(const SpaceSettingsData& settings);
     SpaceSettingsData getSettings() const;
 
@@ -39,7 +73,10 @@ private:
 
     QSlider* m_sliderDiff;
     QSlider* m_sliderLives;
-    QCheckBox* m_checkBonus; // 【新增】奖励模式复选框
+
+    // 【修改】使用自定义控件
+    ImageCheckBox* m_checkBonus;
+    QLabel* m_labelBonusDesc; // 说明文字
 
     QLabel* m_labelDiff;
     QLabel* m_labelLives;

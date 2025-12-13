@@ -76,25 +76,40 @@ void SpaceGame::setupInternalUI() {
     m_btnExit = createBtn("exit");
     connect(m_btnExit, &ImageButton::clicked, this, &SpaceGame::onBtnExitClicked);
 
-    // 菜单位置
-    int centerX = (SCREEN_WIDTH - 200) / 2;
-    int startY = 250;
-    int gap = 60;
+    // --- 计算布局 ---
+    // 假设有4个按钮的位置 (Start/Return 占同一个位置)
+    // 获取按钮尺寸 (假设所有按钮尺寸一致，取Start的大小)
+    m_btnStart->setFixedSizeToPixmap(); // 确保尺寸正确
+    int btnW = m_btnStart->width();
+    int btnH = m_btnStart->height();
 
+    int count = 4; // Start, Option, Hiscore, Exit
+    int spacing = 10; // 紧密排列，间距设为 10px
+    int totalHeight = count * btnH + (count - 1) * spacing;
+
+    int startY = (SCREEN_HEIGHT - totalHeight) / 2; // 垂直居中
+    int centerX = (SCREEN_WIDTH - btnW) / 2;        // 水平居中
+
+    // 1. 开始 / 返回 (位置重叠)
     m_btnStart->move(centerX, startY);
     m_btnReturn->move(centerX, startY);
-    m_btnOption->move(centerX, startY + gap);
-    m_btnHiscore->move(centerX, startY + gap * 2);
-    m_btnExit->move(centerX, startY + gap * 3);
 
-    // 【新增】游戏内暂停按钮
-    // 假设资源名为 space_pause.png，位置左下角
+    // 2. 选项
+    m_btnOption->move(centerX, startY + btnH + spacing);
+
+    // 3. 高分榜
+    m_btnHiscore->move(centerX, startY + 2 * (btnH + spacing));
+
+    // 4. 退出
+    m_btnExit->move(centerX, startY + 3 * (btnH + spacing));
+
+    // --- 游戏内暂停按钮 (保持左下角) ---
     m_btnGamePause = createBtn("pause");
     m_btnGamePause->move(20, 530);
     connect(m_btnGamePause, &ImageButton::clicked, this, &SpaceGame::onBtnGamePauseClicked);
 
     hideMenuUI();
-    hideGameUI(); // 初始隐藏暂停按钮
+    hideGameUI();
 }
 
 // 【新增】显示游戏内UI (暂停按钮)
@@ -271,9 +286,19 @@ void SpaceGame::onGameTick() {
 
 void SpaceGame::draw(QPainter& painter) {
     if (m_state == GameState::Playing) {
-        painter.drawPixmap(0, 0, m_bgPixmap);
+        // 绘制游戏背景 (拉伸铺满)
+        if (!m_bgPixmap.isNull()) {
+            painter.drawPixmap(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, m_bgPixmap);
+        }
+        else {
+            painter.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, Qt::black);
+        }
+
+        // 玩家
         QPointF shipPos(m_playerPos.x() - m_playerPixmap.width() / 2, m_playerPos.y() - m_playerPixmap.height() / 2);
         painter.drawPixmap(shipPos, m_playerPixmap);
+
+        // 实体
         for (SpaceEntity* e : m_entities) {
             if (!e->active) continue;
             QPointF dp = e->pos;
@@ -291,13 +316,20 @@ void SpaceGame::draw(QPainter& painter) {
                 painter.drawPixmap(dp.x() - m_explosionPixmap.width() / 2, dp.y() - m_explosionPixmap.height() / 2, m_explosionPixmap);
             }
         }
+
+        // HUD
         painter.setPen(Qt::white); painter.setFont(QFont("Arial", 16));
         painter.drawText(10, 30, QString("Score: %1").arg(m_score));
         painter.drawText(10, 60, QString("Lives: %1").arg(m_lives));
     }
     else {
-        if (!m_menuBgPixmap.isNull()) painter.drawPixmap(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, m_menuBgPixmap);
-        else painter.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, Qt::black);
+        // 绘制菜单背景 (拉伸铺满)
+        if (!m_menuBgPixmap.isNull()) {
+            painter.drawPixmap(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, m_menuBgPixmap);
+        }
+        else {
+            painter.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, Qt::black);
+        }
     }
 }
 

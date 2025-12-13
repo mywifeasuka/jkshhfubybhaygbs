@@ -5,7 +5,10 @@
     <file alias="img/cancel.bmp">img/CANCEL.bmp</file>
 	<file alias="img/cancel_hover.bmp">img/CANCEL_hover.bmp</file>
 	<file alias="img/cancel_pressed.bmp">img/CANCEL_pressed.bmp</file>
-    <file alias="img/checkbox_button.bmp">img/CHECKBOX_BUTTON.bmp</file>
+    <file alias="img/checkbox_button.png">img/CHECKBOX_BUTTON.png</file>
+	<file alias="img/checkbox_button_1.png">img/CHECKBOX_BUTTON_1.png</file>
+	<file alias="img/checkbox_button_2.png">img/CHECKBOX_BUTTON_2.png</file>
+	<file alias="img/checkbox_button_3.png">img/CHECKBOX_BUTTON_3.png</file>
     <file alias="img/default.bmp">img/DEFAULT.bmp</file>
 	<file alias="img/default_pressed.bmp">img/DEFAULT_pressed.bmp</file>
 	<file alias="img/default_hover.bmp">img/DEFAULT_hover.bmp</file>
