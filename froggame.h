@@ -8,7 +8,6 @@
 #include <QPointF>
 #include <QtMultimedia/QSoundEffect>
 
-// LotusLeaf 结构体保持不变
 struct LotusLeaf {
     int id;
     int row;
@@ -37,23 +36,22 @@ public:
 
 private slots:
     void onGameTick();
-    void onAnimTick(); // 【新增】动画定时器槽
+    void onAnimTick();
 
 private:
     void spawnLeaves();
-    void resetFrog();
-    void checkInput();
+    void resetFrog();           // 重置青蛙位置（准备下一只）
+    void checkInput(const QString& key); // 修改：接收字符进行判定
     void loadDictionary(const QString& filename);
 
     // --- 资源 ---
     QPixmap m_bgPixmap;
     QPixmap m_leafPixmap;
 
-    // 【修改】青蛙贴图组
-    QPixmap m_frogBack1;  // 背面-正常
-    QPixmap m_frogBack2;  // 背面-鼓气
-    QPixmap m_frogFront1; // 正面-正常 (对岸)
-    QPixmap m_frogFront2; // 正面-鼓气 (对岸)
+    QPixmap m_frogBack1;
+    QPixmap m_frogBack2;
+    QPixmap m_frogFront1;
+    QPixmap m_frogFront2;
 
     // --- 音效 ---
     QSoundEffect* m_jumpSound;
@@ -65,8 +63,8 @@ private:
     QList<LotusLeaf*> m_leaves;
     QStringList m_wordList;
 
-    int m_frogCount;     // 剩余青蛙 (岸边等待的)
-    int m_successCount;  // 【新增】成功到达对岸的青蛙
+    int m_frogsRemaining; // 【修改】剩余待出场的青蛙总数 (初始5)
+    int m_successCount;   // 成功到达对岸的数量
 
     int m_currentRow;
     LotusLeaf* m_currentLeaf;
@@ -75,9 +73,13 @@ private:
     QString m_goalWord;
     QString m_inputBuffer;
 
+    // 【新增】输入锁定机制
+    LotusLeaf* m_lockedLeaf; // 当前锁定的荷叶
+    bool m_isGoalLocked;     // 当前是否锁定了终点单词
+
     QTimer* m_physicsTimer;
-    QTimer* m_animTimer; // 【新增】控制呼吸动画
-    bool m_isCroaking;   // 【新增】当前是否处于鼓气状态
+    QTimer* m_animTimer;
+    bool m_isCroaking;
 
     FrogSettingsData m_settings;
 };
