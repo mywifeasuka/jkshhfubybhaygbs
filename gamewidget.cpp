@@ -1,5 +1,6 @@
 ﻿#include "gamewidget.h"
 #include "gameresultdialog.h"
+#include "confirmationdialog.h"
 #include <QVBoxLayout>
 #include <QMessageBox>
 #include <QPainter>
@@ -109,6 +110,24 @@ void GameWidget::onStopGameRound() {
 }
 
 void GameWidget::onReturnToMenu() {
+    if (m_appState == InGame) {
+        // 暂停游戏，防止背景还在跑
+        bool wasRunning = false;
+        if (m_renderTimer->isActive()) {
+            m_renderTimer->stop();
+            wasRunning = true;
+        }
+
+        // 弹出确认对话框
+        ConfirmationDialog dlg(ConfirmationDialog::Mode_ExitGame, this);
+        if (dlg.exec() == QDialog::Rejected) {
+            // 用户点击了“继续” (取消退出)
+            if (wasRunning) m_renderTimer->start(); // 恢复游戏
+            return;
+        }
+        // 用户点击了“退出”，继续执行下面的返回菜单逻辑
+    }
+
     m_renderTimer->stop();
 
     m_appState = MainMenu;
@@ -221,12 +240,38 @@ void GameWidget::onPauseGame() {
 }
 
 void GameWidget::onShowSettings() {
+    // 只有鼠的故事支持详细设置，这里做个转换判断
+    MoleGame* moleGame = dynamic_cast<MoleGame*>(m_currentGame);
+    if (!moleGame) return; // 其他游戏暂不支持或不弹窗
+
+    // 记录旧设置，用于比较是否发生了改变
+    GameSettingsData oldSettings = m_settingsDialog->getSettings(); // 假设你在 GameSettings 中实现了 getSettings
+
+    // 显示设置窗口
     if (m_settingsDialog->exec() == QDialog::Accepted) {
-        GameSettingsData data = m_settingsDialog->getSettings();
-        // 只有鼠的故事需要这个设置，可以尝试 dynamic_cast 或者在 GameBase 加通用设置接口
-        if (m_moleGame == m_currentGame) {
-            m_moleGame->updateSettings(data);
-            m_moleGame->initGame(); // 重置以生效
+        GameSettingsData newSettings = m_settingsDialog->getSettings();
+
+        // 比较设置是否改变 (简单比较几个关键字段)
+        bool changed = (oldSettings.gameTimeSec != newSettings.gameTimeSec) ||
+            (oldSettings.spawnIntervalMs != newSettings.spawnIntervalMs) ||
+            (oldSettings.stayTimeMs != newSettings.stayTimeMs);
+
+        if (changed) {
+            // 弹出“立即生效吗？”确认框
+            ConfirmationDialog dlg(ConfirmationDialog::Mode_ApplySettings, this);
+
+            if (dlg.exec() == QDialog::Accepted) {
+                // --- 点击“是”：应用设置并立即开始 ---
+                moleGame->updateSettings(newSettings);
+                moleGame->initGame(); // 重置游戏
+                onStartGame();        // 立即开始
+            }
+            else {
+                // --- 点击“否”：仅应用设置，不重启 ---
+                // 或者什么都不做？根据原版“否”通常是保存但不重置
+                moleGame->updateSettings(newSettings);
+                // 保持当前状态 (可能在 Ready 或 Paused)
+            }
         }
     }
 }

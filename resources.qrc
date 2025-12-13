@@ -12,7 +12,11 @@
     <file alias="img/dropdown_button.bmp">img/DROPDOWN_BUTTON.bmp</file>
     <file alias="img/main_dlg_bg.bmp">img/MAIN_DLG_BG.bmp</file>
     <file alias="img/main_dlg_exit.bmp">img/MAIN_DLG_EXIT.bmp</file>
+	<file alias="img/main_dlg_exit_hover.bmp">img/MAIN_DLG_EXIT_hover.bmp</file>
+	<file alias="img/main_dlg_exit_pressed.bmp">img/MAIN_DLG_EXIT_pressed.bmp</file>
     <file alias="img/main_dlg_replay.bmp">img/MAIN_DLG_REPLAY.bmp</file>
+	<file alias="img/main_dlg_replay_hover.bmp">img/MAIN_DLG_REPLAY_hover.bmp</file>
+	<file alias="img/main_dlg_replay_pressed.bmp">img/MAIN_DLG_REPLAY_pressed.bmp</file>
     <file alias="img/main_quit.bmp">img/MAIN_QUIT.bmp</file>
     <file alias="img/mole_appear.bmp">img/MOLE_APPEAR.bmp</file>
     <file alias="img/background.bmp">img/MOLE_BACKGROUND.BMP</file>
@@ -32,6 +36,8 @@
     <file alias="img/carrot.bmp">img/MOLE_RADISH.bmp</file>
     <file alias="img/mole_setup.bmp">img/MOLE_SETUP.bmp</file>
     <file alias="img/no.bmp">img/NO.bmp</file>
+	<file alias="img/no_hover.bmp">img/NO_hover.bmp</file>
+	<file alias="img/no_pressed.bmp">img/NO_pressed.bmp</file>
     <file alias="img/ok.bmp">img/OK.bmp</file>
 	<file alias="img/ok_hover.bmp">img/OK_hover.bmp</file>
 	<file alias="img/ok_pressed.bmp">img/OK_pressed.bmp</file>
@@ -54,6 +60,8 @@
     <file alias="img/slider_slider.bmp">img/SLIDER_SLIDER.bmp</file>
 	<file alias="img/slider_slider_down.bmp">img/SLIDER_SLIDER_down.bmp</file>
     <file alias="img/yes.bmp">img/YES.bmp</file>
+	<file alias="img/yes_hover.bmp">img/YES_hover.bmp</file>
+	<file alias="img/yes_pressed.bmp">img/YES_pressed.bmp</file>
     
     <file alias="snd/anibtn_click.wav">snd/ANIBTN_CLICK.wav</file>
     <file alias="snd/anibtn_enter.wav">snd/ANIBTN_ENTER.wav</file>

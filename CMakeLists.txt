@@ -47,6 +47,8 @@ set(PROJECT_SOURCES
     froggame.cpp
     gameresultdialog.cpp
     gameresultdialog.h
+    confirmationdialog.cpp
+    confirmationdialog.h
 )
 
 set(PROJECT_RESOURCES
