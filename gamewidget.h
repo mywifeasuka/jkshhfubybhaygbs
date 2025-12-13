@@ -69,6 +69,7 @@ private:
     SpaceGame* m_spaceGame;
     AppleGame* m_appleGame;
     FrogGame* m_frogGame;
+    PoliceGameSettings* m_policeSettingsDialog;
 
     // --- UI 元素 ---
     // 1. 主菜单元素

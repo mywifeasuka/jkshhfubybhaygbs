@@ -1,6 +1,7 @@
 ﻿#include "gamewidget.h"
 #include "gameresultdialog.h"
 #include "confirmationdialog.h"
+#include "policegamesettings.h"
 #include <QVBoxLayout>
 #include <QMessageBox>
 #include <QPainter>
@@ -21,6 +22,7 @@ GameWidget::GameWidget(QWidget* parent)
     m_spaceGame = new SpaceGame(this);
     m_appleGame = new AppleGame(this);
     m_frogGame = new FrogGame(this);
+    m_policeSettingsDialog = new PoliceGameSettings(this);
 
     // 2. 初始化设置窗口
     m_settingsDialog = new GameSettings(this);
@@ -389,6 +391,22 @@ void GameWidget::onShowSettings() {
                 else {
                     frogGame->updateSettings(newSettings); // 仅更新参数
                 }
+            }
+        }
+        return;
+    }
+
+    PoliceGame* policeGame = dynamic_cast<PoliceGame*>(m_currentGame);
+    if (policeGame) {
+        // 弹出设置框
+        if (m_policeSettingsDialog->exec() == QDialog::Accepted) {
+            PoliceSettingsData data = m_policeSettingsDialog->getSettings();
+            // 弹出确认框 (ConfirmationDialog) 逻辑同上
+            ConfirmationDialog dlg(ConfirmationDialog::Mode_ApplySettings, this);
+            if (dlg.exec() == QDialog::Accepted) {
+                policeGame->updateSettings(data);
+                policeGame->initGame(); // 重置游戏应用新角色/难度
+                onStartGame();
             }
         }
         return;

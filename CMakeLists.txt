@@ -57,6 +57,8 @@ set(PROJECT_SOURCES
     spacegamesettings.cpp
     spacenamedialog.h
     spacenamedialog.cpp
+    policegamesettings.h
+    policegamesettings.cpp
 )
 
 set(PROJECT_RESOURCES
