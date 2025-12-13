@@ -1,13 +1,14 @@
 ﻿#ifndef MOLE_H
 #define MOLE_H
 
-#include <QObject> // 改为继承 QObject
+#include <QObject>
 #include <QPixmap>
 #include <QTimer>
 #include <QPainter>
 #include <QPoint>
+#include <QtMultimedia/QSoundEffect>
 
-class Mole : public QObject { // 不再是 QWidget
+class Mole : public QObject {
     Q_OBJECT
 
 public:
@@ -15,22 +16,24 @@ public:
         Hidden,
         Visible,
         Hit,
-        Escaping
+        Escaping_1, // 逃跑动画帧1
+        Escaping_2  // 逃跑动画帧2
     };
 
     explicit Mole(QObject* parent = nullptr);
 
-    // 设置位置（替代原来的 move）
     void setPos(const QPoint& pos);
     QPoint getPos() const { return m_pos; }
 
     QString getLetter() const { return currentLetter; }
-    bool isVisible() const { return currentState != Hidden; }
 
-    // 核心绘制函数（替代 paintEvent）
+    // 只有 Visible 状态才算"在场活跃"，被打中或逃跑中都不算
+    bool isActive() const { return currentState == Visible; }
+    // 只有 Hidden 状态才算"空闲"，可以生成新地鼠
+    bool isFree() const { return currentState == Hidden; }
+
     void draw(QPainter& painter);
 
-    // 逻辑控制
     void showMole(const QString& letter, int stayTime);
     void hideMole();
     void hitByUser();
@@ -38,24 +41,32 @@ public:
     void resume();
 
 signals:
-    void escaped();
-    void hitSuccess();
+    void escaped();    // 逃跑开始信号
+    void hitSuccess(); // 被击中信号
+    void finished();   // 动画结束变为空闲信号
 
 private slots:
     void onVisualCountdown();
     void onStayTimerTimeout();
-    void onAnimationTimerTimeout();
+    void onEscapeAnimation(); // 逃跑动画循环
+    void onHitAnimationFinished();
 
 private:
-    QPoint m_pos; // 记录地鼠坐标
-
+    QPoint m_pos;
     int remainingStayTimeMs;
     MoleState currentState;
     QString currentLetter;
 
+    // 资源
     QPixmap normalPixmap;
     QPixmap hitPixmap;
+    QPixmap escapePixmap1; // 逃跑图1
+    QPixmap escapePixmap2; // 逃跑图2
 
+    // 音效
+    QSoundEffect* escapeSound;
+
+    // 计时器
     QTimer* stayTimer;
     QTimer* animationTimer;
     QTimer* visualCountdownTimer;

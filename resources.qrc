@@ -30,7 +30,8 @@
     <file alias="img/mole_dlg_replay.bmp">img/MOLE_DLG_REPLAY.bmp</file>
 	<file alias="img/mole_dlg_replay_hover.bmp">img/MOLE_DLG_REPLAY_hover.bmp</file>
 	<file alias="img/mole_dlg_replay_pressed.bmp">img/MOLE_DLG_REPLAY_pressed.bmp</file>
-    <file alias="img/mole_hide.bmp">img/MOLE_HIDE.bmp</file>
+    <file alias="img/mole_hide_1.bmp">img/MOLE_HIDE_1.bmp</file>
+	<file alias="img/mole_hide_2.bmp">img/MOLE_HIDE_2.bmp</file>
     <file alias="img/mole_hit.bmp">img/MOLE_HIT.bmp</file>
     <file alias="img/mole_normal.bmp">img/MOLE_NORMAL.bmp</file>
     <file alias="img/carrot.bmp">img/MOLE_RADISH.bmp</file>

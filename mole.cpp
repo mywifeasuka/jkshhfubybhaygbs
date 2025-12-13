@@ -1,21 +1,34 @@
 ﻿#include "mole.h"
+#include <QDebug>
 
 Mole::Mole(QObject* parent)
-    : QObject(parent), // 调用 QObject 构造
+    : QObject(parent),
     currentState(Hidden) {
 
-    // 加载资源
+    // 1. 加载资源
     normalPixmap.load(":/img/mole_normal.bmp");
     hitPixmap.load(":/img/mole_hit.bmp");
 
-    // 初始化定时器
+    // 尝试加载两帧逃跑动画，如果资源里没有专门的1/2，则用通用的代替
+    escapePixmap1.load(":/img/mole_hide_1.bmp");
+    if (escapePixmap1.isNull()) escapePixmap1.load(":/img/mole_hide.bmp");
+
+    escapePixmap2.load(":/img/mole_hide_2.bmp");
+    if (escapePixmap2.isNull()) escapePixmap2.load(":/img/mole_hide.bmp");
+
+    // 2. 初始化音效
+    escapeSound = new QSoundEffect(this);
+    escapeSound->setSource(QUrl::fromLocalFile(":/snd/mouse_away.wav"));
+
+    // 3. 初始化计时器
     stayTimer = new QTimer(this);
     stayTimer->setSingleShot(true);
     connect(stayTimer, &QTimer::timeout, this, &Mole::onStayTimerTimeout);
 
     animationTimer = new QTimer(this);
     animationTimer->setSingleShot(true);
-    connect(animationTimer, &QTimer::timeout, this, &Mole::onAnimationTimerTimeout);
+    // 注意：Hit和Escape复用这个Timer，通过 connect 动态绑定或状态判断处理
+    connect(animationTimer, &QTimer::timeout, this, &Mole::onEscapeAnimation);
 
     visualCountdownTimer = new QTimer(this);
     visualCountdownTimer->setInterval(1000);
@@ -26,21 +39,17 @@ void Mole::setPos(const QPoint& pos) {
     m_pos = pos;
 }
 
-// 核心绘制逻辑
 void Mole::draw(QPainter& painter) {
     if (currentState == Hidden) return;
 
     if (currentState == Visible) {
-        // 在指定位置绘制地鼠
         painter.drawPixmap(m_pos, normalPixmap);
 
-        // 绘制字母 (相对坐标调整)
         QRect letterRect(m_pos.x() + 70, m_pos.y() + 20, 40, 30);
         painter.setFont(QFont("Arial", 20, QFont::Bold));
         painter.setPen(Qt::black);
         painter.drawText(letterRect, Qt::AlignCenter, currentLetter);
 
-        // 绘制倒计时
         if (remainingDisplayTime > 0) {
             QRect countdownRect(m_pos.x() + 70, m_pos.y() + 110, 20, 20);
             painter.setFont(QFont("Arial", 14, QFont::Bold));
@@ -50,6 +59,12 @@ void Mole::draw(QPainter& painter) {
     }
     else if (currentState == Hit) {
         painter.drawPixmap(m_pos, hitPixmap);
+    }
+    else if (currentState == Escaping_1) {
+        painter.drawPixmap(m_pos, escapePixmap1);
+    }
+    else if (currentState == Escaping_2) {
+        painter.drawPixmap(m_pos, escapePixmap2);
     }
 }
 
@@ -71,28 +86,54 @@ void Mole::onVisualCountdown() {
     if (remainingDisplayTime <= 0) {
         visualCountdownTimer->stop();
     }
-    // 注意：不再调用 update()，因为 GameWidget 会负责重绘
 }
 
 void Mole::hitByUser() {
     if (currentState != Visible) return;
 
     stayTimer->stop();
+    visualCountdownTimer->stop();
+
     currentState = Hit;
+
+    // 切换 Timer 连接到 Hit 逻辑
+    animationTimer->disconnect(this);
+    connect(animationTimer, &QTimer::timeout, this, &Mole::onHitAnimationFinished);
     animationTimer->start(500);
-    emit hitSuccess();
+
+    emit hitSuccess(); // 抛出信号通知 GameWidget 补充新地鼠
+}
+
+void Mole::onHitAnimationFinished() {
+    hideMole();
 }
 
 void Mole::onStayTimerTimeout() {
     if (currentState != Visible) return;
 
-    currentState = Escaping;
-    animationTimer->start(200);
-    emit escaped();
+    // 时间到，开始逃跑
+    currentState = Escaping_1;
+    visualCountdownTimer->stop();
+    escapeSound->play(); // 播放逃跑音效
+
+    // 切换 Timer 连接到 Escape 逻辑
+    animationTimer->disconnect(this);
+    connect(animationTimer, &QTimer::timeout, this, &Mole::onEscapeAnimation);
+
+    // 每帧显示 150ms
+    animationTimer->start(150);
+
+    emit escaped(); // 抛出信号通知 GameWidget 扣分并补充新地鼠
 }
 
-void Mole::onAnimationTimerTimeout() {
-    hideMole();
+void Mole::onEscapeAnimation() {
+    if (currentState == Escaping_1) {
+        currentState = Escaping_2;
+        animationTimer->start(150);
+    }
+    else if (currentState == Escaping_2) {
+        hideMole();
+    }
 }
 
 void Mole::hideMole() {
@@ -101,6 +142,8 @@ void Mole::hideMole() {
     stayTimer->stop();
     animationTimer->stop();
     visualCountdownTimer->stop();
+
+    emit finished();
 }
 
 void Mole::pause() {
@@ -111,6 +154,9 @@ void Mole::pause() {
     if (visualCountdownTimer->isActive()) {
         visualCountdownTimer->stop();
     }
+    if (animationTimer->isActive()) {
+        animationTimer->stop();
+    }
 }
 
 void Mole::resume() {
@@ -119,6 +165,9 @@ void Mole::resume() {
         if (remainingDisplayTime > 0 && !visualCountdownTimer->isActive()) {
             visualCountdownTimer->start();
         }
-        remainingStayTimeMs = 0;
+    }
+    // 如果正在播放动画，恢复播放
+    if (currentState == Hit || currentState == Escaping_1 || currentState == Escaping_2) {
+        animationTimer->start();
     }
 }
