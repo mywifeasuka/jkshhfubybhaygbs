@@ -20,11 +20,17 @@ const QStringList DEFAULT_WORDS = {
 };
 
 FrogGame::FrogGame(QObject* parent) : GameBase(parent) {
-    // 资源加载
+    // 1. 加载资源
     m_bgPixmap.load(":/img/frog_background.png");
-    m_frogPixmap.load(":/img/frog_back_1.png");
     m_leafPixmap.load(":/img/frog_leaf.png");
 
+    // 【修改】加载青蛙多态贴图
+    m_frogBack1.load(":/img/frog_back_1.png");
+    m_frogBack2.load(":/img/frog_back_2.png");
+    m_frogFront1.load(":/img/frog_front_1.png");
+    m_frogFront2.load(":/img/frog_front_2.png");
+
+    // 音效
     m_jumpSound = new QSoundEffect(this);
     m_jumpSound->setSource(QUrl::fromLocalFile(":/snd/frog_jump.wav"));
     m_splashSound = new QSoundEffect(this);
@@ -35,9 +41,16 @@ FrogGame::FrogGame(QObject* parent) : GameBase(parent) {
     m_bgMusic->setSource(QUrl::fromLocalFile(":/snd/frog_bg.wav"));
     m_bgMusic->setLoopCount(QSoundEffect::Infinite);
 
+    // 物理定时器
     m_physicsTimer = new QTimer(this);
     m_physicsTimer->setInterval(1000 / GAME_FPS);
     connect(m_physicsTimer, &QTimer::timeout, this, &FrogGame::onGameTick);
+
+    // 【新增】动画定时器 (1秒切换一次)
+    m_animTimer = new QTimer(this);
+    m_animTimer->setInterval(1000);
+    connect(m_animTimer, &QTimer::timeout, this, &FrogGame::onAnimTick);
+    m_isCroaking = false;
 
     // 初始设置
     m_settings.difficulty = 1;
@@ -55,74 +68,59 @@ void FrogGame::updateSettings(const FrogSettingsData& settings) {
     loadDictionary(m_settings.dictionaryFile);
 }
 
+// ... loadDictionary 保持不变 ...
 void FrogGame::loadDictionary(const QString& filename) {
     QString path = QCoreApplication::applicationDirPath() + "/Data/English/T_WORD/Dictionary/" + filename;
-
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
         if (m_wordList.isEmpty()) m_wordList = DEFAULT_WORDS;
         return;
     }
-
     QByteArray data = file.readAll();
     file.close();
-
     QStringList newWords;
     QString currentWord;
-
     for (char c : data) {
         if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '\'' || c == '-') {
             currentWord.append(c);
         }
         else {
-            if (currentWord.length() >= 2) {
-                newWords.append(currentWord.toUpper());
-            }
+            if (currentWord.length() >= 2) newWords.append(currentWord.toUpper());
             currentWord.clear();
         }
     }
-    if (currentWord.length() >= 2) {
-        newWords.append(currentWord.toUpper());
-    }
-
-    if (!newWords.isEmpty()) {
-        m_wordList = newWords;
-    }
-    else {
-        if (m_wordList.isEmpty()) m_wordList = DEFAULT_WORDS;
-    }
+    if (currentWord.length() >= 2) newWords.append(currentWord.toUpper());
+    if (!newWords.isEmpty()) m_wordList = newWords;
+    else if (m_wordList.isEmpty()) m_wordList = DEFAULT_WORDS;
 }
 
 void FrogGame::initGame() {
     m_state = GameState::Ready;
     m_score = 0;
     m_frogCount = 5;
+    m_successCount = 0; // 【新增】重置成功数
 
     if (m_wordList.size() <= DEFAULT_WORDS.size()) {
         loadDictionary(m_settings.dictionaryFile);
     }
 
-    // 【修改点 1】初始化时只清空，不生成。实现“打开游戏时没有荷叶”
     qDeleteAll(m_leaves);
     m_leaves.clear();
-
     resetFrog();
     emit scoreChanged(0);
 }
 
 void FrogGame::startGame() {
     if (m_state == GameState::Ready || m_state == GameState::GameOver) {
-        // 先调用 initGame 重置分数和青蛙状态
         initGame();
-
         m_state = GameState::Playing;
         m_physicsTimer->start();
+        m_animTimer->start(); // 启动动画
         m_bgMusic->play();
 
-        // 【修改点 2】点击开始后，手动生成初始的一批荷叶
+        // 初始生成荷叶
         double baseSpeed = 0.5 + (m_settings.difficulty - 1) * 0.4;
         double speeds[] = { baseSpeed, -baseSpeed * 1.3, baseSpeed * 1.6 };
-
         for (int r = 0; r < 3; r++) {
             int positions[] = { 160, 400, 640 };
             for (int x : positions) {
@@ -136,23 +134,24 @@ void FrogGame::startGame() {
 void FrogGame::stopGame() {
     m_state = GameState::GameOver;
     m_physicsTimer->stop();
+    m_animTimer->stop();
     m_bgMusic->stop();
-
-    // 【修改点 3】结束时清屏
     qDeleteAll(m_leaves);
     m_leaves.clear();
 }
 
+// 【新增】动画槽函数
+void FrogGame::onAnimTick() {
+    m_isCroaking = !m_isCroaking;
+}
+
+// ... spawnLeaves, onGameTick, handleKeyPress 保持不变 ...
 void FrogGame::spawnLeaves() {
     double baseSpeed = 0.5 + (m_settings.difficulty - 1) * 0.4;
     double speeds[] = { baseSpeed, -baseSpeed * 1.3, baseSpeed * 1.6 };
     double minGap = 260.0;
-
     for (int r = 0; r < 3; ++r) {
-        double rightMost = -9999;
-        double leftMost = 9999;
-        bool hasLeaf = false;
-
+        double rightMost = -9999; double leftMost = 9999; bool hasLeaf = false;
         for (LotusLeaf* leaf : m_leaves) {
             if (leaf->row == r) {
                 if (leaf->x > rightMost) rightMost = leaf->x;
@@ -160,29 +159,55 @@ void FrogGame::spawnLeaves() {
                 hasLeaf = true;
             }
         }
-
-        bool needSpawn = false;
-        double spawnX = 0;
-
+        bool needSpawn = false; double spawnX = 0;
         if (speeds[r] > 0) {
-            if (!hasLeaf || leftMost > (minGap - 100)) {
-                spawnX = -100;
-                needSpawn = true;
-            }
+            if (!hasLeaf || leftMost > (minGap - 100)) { spawnX = -100; needSpawn = true; }
         }
         else {
-            if (!hasLeaf || rightMost < (SCREEN_WIDTH - minGap + 100)) {
-                spawnX = SCREEN_WIDTH + 100;
-                needSpawn = true;
-            }
+            if (!hasLeaf || rightMost < (SCREEN_WIDTH - minGap + 100)) { spawnX = SCREEN_WIDTH + 100; needSpawn = true; }
         }
-
         if (needSpawn) {
             if (QRandomGenerator::global()->bounded(100) < 15) {
                 QString w = m_wordList[QRandomGenerator::global()->bounded(m_wordList.size())];
                 m_leaves.append(new LotusLeaf(r, spawnX, speeds[r], w));
             }
         }
+    }
+}
+
+void FrogGame::onGameTick() {
+    spawnLeaves();
+    for (auto it = m_leaves.begin(); it != m_leaves.end(); ) {
+        LotusLeaf* leaf = *it;
+        leaf->x += leaf->speed;
+        if (leaf->x < -200 || leaf->x > SCREEN_WIDTH + 200) {
+            if (m_currentLeaf == leaf) {
+                m_frogCount--;
+                m_splashSound->play();
+                if (m_frogCount > 0) resetFrog();
+                else { stopGame(); emit gameFinished(m_score, false); }
+            }
+            delete leaf; it = m_leaves.erase(it);
+        }
+        else { ++it; }
+    }
+    if (m_currentLeaf) {
+        m_frogPos.setX(m_currentLeaf->x);
+        m_frogPos.setY(ROW_Y[m_currentLeaf->row]);
+    }
+}
+
+void FrogGame::handleKeyPress(QKeyEvent* event) {
+    if (m_state != GameState::Playing) return;
+    if (event->key() == Qt::Key_Backspace) {
+        if (!m_inputBuffer.isEmpty()) m_inputBuffer.chop(1);
+        return;
+    }
+    QString text = event->text().toUpper();
+    if (text.isEmpty() || text.length() > 1) return;
+    if (text.at(0) >= 'A' && text.at(0) <= 'Z') {
+        m_inputBuffer += text;
+        checkInput();
     }
 }
 
@@ -207,51 +232,6 @@ void FrogGame::pauseGame() {
     }
 }
 
-void FrogGame::onGameTick() {
-    spawnLeaves();
-    for (auto it = m_leaves.begin(); it != m_leaves.end(); ) {
-        LotusLeaf* leaf = *it;
-        leaf->x += leaf->speed;
-
-        if (leaf->x < -200 || leaf->x > SCREEN_WIDTH + 200) {
-            if (m_currentLeaf == leaf) {
-                m_frogCount--;
-                m_splashSound->play();
-                if (m_frogCount > 0) {
-                    resetFrog();
-                }
-                else {
-                    stopGame();
-                    emit gameFinished(m_score, false);
-                }
-            }
-            delete leaf;
-            it = m_leaves.erase(it);
-        }
-        else {
-            ++it;
-        }
-    }
-    if (m_currentLeaf) {
-        m_frogPos.setX(m_currentLeaf->x);
-        m_frogPos.setY(ROW_Y[m_currentLeaf->row]);
-    }
-}
-
-void FrogGame::handleKeyPress(QKeyEvent* event) {
-    if (m_state != GameState::Playing) return;
-    if (event->key() == Qt::Key_Backspace) {
-        if (!m_inputBuffer.isEmpty()) m_inputBuffer.chop(1);
-        return;
-    }
-    QString text = event->text().toUpper();
-    if (text.isEmpty() || text.length() > 1) return;
-    if (text.at(0) >= 'A' && text.at(0) <= 'Z') {
-        m_inputBuffer += text;
-        checkInput();
-    }
-}
-
 void FrogGame::checkInput() {
     int targetRow = m_currentRow + 1;
     if (targetRow == 3) {
@@ -259,6 +239,7 @@ void FrogGame::checkInput() {
             if (m_inputBuffer == m_goalWord) {
                 m_successSound->play();
                 m_score += 500;
+                m_successCount++; // 【新增】成功计数+1
                 emit scoreChanged(m_score);
                 resetFrog();
             }
@@ -321,7 +302,7 @@ void FrogGame::draw(QPainter& painter) {
         painter.drawText(startX, GOAL_BANK_Y + 10, m_inputBuffer);
     }
 
-    // 绘制荷叶
+    // --- 绘制荷叶与文字 ---
     for (LotusLeaf* leaf : m_leaves) {
         if (!m_leafPixmap.isNull()) {
             painter.drawPixmap(leaf->x - m_leafPixmap.width() / 2,
@@ -329,48 +310,80 @@ void FrogGame::draw(QPainter& painter) {
                 m_leafPixmap);
         }
 
-        painter.setFont(QFont("Arial", 14, QFont::Bold));
-        bool isTarget = (leaf->row == m_currentRow + 1) && leaf->word.startsWith(m_inputBuffer);
-        int textY = ROW_Y[leaf->row] + 6;
+        // 【修改点 1】文字样式：小写 + 较小字体 + 较宽文本框
+        painter.setFont(QFont("Arial", 12, QFont::Bold)); // 字体改小
 
-        // 【修改点 4】文字颜色：普通状态黑色，选中输入时红色+黑色
+        QString displayWord = leaf->word.toLower(); // 转小写显示
+        QString inputLower = m_inputBuffer.toLower();
+
+        bool isTarget = (leaf->row == m_currentRow + 1) && leaf->word.startsWith(m_inputBuffer);
+        int textY = ROW_Y[leaf->row] + 5;
+
+        // 使用更宽的矩形区域 (140px) 确保长单词完整显示
+        int boxWidth = 140;
+        int startX = leaf->x - boxWidth / 2;
+
         if (isTarget && !m_inputBuffer.isEmpty()) {
             QFontMetrics fm(painter.font());
-            int totalW = fm.horizontalAdvance(leaf->word);
-            int startX = leaf->x - totalW / 2;
 
-            // 已输入部分：红色 (高亮显示进度)
+            // 计算居中偏移
+            int wordWidth = fm.horizontalAdvance(displayWord);
+            int textStartX = leaf->x - wordWidth / 2;
+
+            // 已输入 (红色)
             painter.setPen(Qt::red);
-            painter.drawText(startX, textY, m_inputBuffer);
+            painter.drawText(textStartX, textY, inputLower);
 
-            // 未输入部分：黑色 (保持默认清晰度)
-            int typedW = fm.horizontalAdvance(m_inputBuffer);
+            // 未输入 (黑色)
+            int typedW = fm.horizontalAdvance(inputLower);
             painter.setPen(Qt::black);
-            painter.drawText(startX + typedW, textY, leaf->word.mid(m_inputBuffer.length()));
+            painter.drawText(textStartX + typedW, textY, displayWord.mid(inputLower.length()));
         }
         else {
-            // 普通状态：黑色
             painter.setPen(Qt::black);
-            QRect textRect(leaf->x - 60, ROW_Y[leaf->row] - 20, 120, 40);
-            painter.drawText(textRect, Qt::AlignCenter, leaf->word);
+            QRect textRect(leaf->x - boxWidth / 2, ROW_Y[leaf->row] - 20, boxWidth, 40);
+            painter.drawText(textRect, Qt::AlignCenter, displayWord);
         }
     }
 
-    // 青蛙绘制
-    if (!m_frogPixmap.isNull()) {
-        painter.drawPixmap(m_frogPos.x() - m_frogPixmap.width() / 2,
-            m_frogPos.y() - m_frogPixmap.height() / 2,
-            m_frogPixmap);
+    // --- 【修改点 2】 绘制玩家青蛙 (带动画) ---
+    // 根据 m_isCroaking 切换 Back1 和 Back2
+    QPixmap* currentFrogPix = m_isCroaking ? &m_frogBack2 : &m_frogBack1;
+    if (currentFrogPix && !currentFrogPix->isNull()) {
+        painter.drawPixmap(m_frogPos.x() - currentFrogPix->width() / 2,
+            m_frogPos.y() - currentFrogPix->height() / 2,
+            *currentFrogPix);
     }
 
-    // 剩余生命
+    // --- 绘制生命值 (岸边等待的青蛙) ---
     for (int i = 0; i < m_frogCount; ++i) {
         int fx = SCREEN_WIDTH - 40 - (i * 35);
         int fy = SCREEN_HEIGHT - 40;
-        if (!m_frogPixmap.isNull())
-            painter.drawPixmap(fx, fy, 25, 25, m_frogPixmap);
+        // 岸边青蛙也呼吸
+        if (currentFrogPix && !currentFrogPix->isNull())
+            painter.drawPixmap(fx, fy, 25, 25, *currentFrogPix);
     }
 
+    // --- 【修改点 3】 绘制到达对岸的青蛙 (带动画) ---
+    // 使用 Front1 和 Front2
+    QPixmap* goalFrogPix = m_isCroaking ? &m_frogFront2 : &m_frogFront1;
+
+    // 在终点岸边均匀排列
+    int startGoalX = 50;
+    int gapGoal = 50;
+    for (int i = 0; i < m_successCount; ++i) {
+        int gx = startGoalX + i * gapGoal;
+        // 如果太多了就从头叠或者换行，这里简单处理超出屏幕的情况
+        if (gx > SCREEN_WIDTH - 50) break;
+
+        int gy = 40; // 终点岸边的位置
+
+        if (goalFrogPix && !goalFrogPix->isNull()) {
+            painter.drawPixmap(gx, gy, 40, 40, *goalFrogPix);
+        }
+    }
+
+    // 分数
     painter.setPen(Qt::white);
     painter.setFont(QFont("Microsoft YaHei", 14, QFont::Bold));
     painter.drawText(20, 40, QString("Score: %1").arg(m_score));

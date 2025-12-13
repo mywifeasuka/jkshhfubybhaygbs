@@ -2,13 +2,13 @@
 #define FROGGAME_H
 
 #include "gamebase.h"
-#include "froggamesettings.h" 
+#include "froggamesettings.h"
 #include <QPixmap>
 #include <QList>
 #include <QPointF>
 #include <QtMultimedia/QSoundEffect>
 
-
+// LotusLeaf 结构体保持不变
 struct LotusLeaf {
     int id;
     int row;
@@ -33,38 +33,41 @@ public:
     void stopGame() override;
     void draw(QPainter& painter) override;
     void handleKeyPress(QKeyEvent* event) override;
-
-    // 更新设置
     void updateSettings(const FrogSettingsData& settings);
 
 private slots:
     void onGameTick();
+    void onAnimTick(); // 【新增】动画定时器槽
 
 private:
     void spawnLeaves();
-    void checkFrogStatus();
     void resetFrog();
     void checkInput();
-
-    // 加载词库文件
     void loadDictionary(const QString& filename);
 
-    // 资源 
+    // --- 资源 ---
     QPixmap m_bgPixmap;
-    QPixmap m_frogPixmap;
     QPixmap m_leafPixmap;
 
-    // 音效
+    // 【修改】青蛙贴图组
+    QPixmap m_frogBack1;  // 背面-正常
+    QPixmap m_frogBack2;  // 背面-鼓气
+    QPixmap m_frogFront1; // 正面-正常 (对岸)
+    QPixmap m_frogFront2; // 正面-鼓气 (对岸)
+
+    // --- 音效 ---
     QSoundEffect* m_jumpSound;
     QSoundEffect* m_bgMusic;
     QSoundEffect* m_splashSound;
     QSoundEffect* m_successSound;
 
-    //游戏数据 
+    // --- 游戏数据 ---
     QList<LotusLeaf*> m_leaves;
-    QStringList m_wordList; // 当前词库
+    QStringList m_wordList;
 
-    int m_frogCount;
+    int m_frogCount;     // 剩余青蛙 (岸边等待的)
+    int m_successCount;  // 【新增】成功到达对岸的青蛙
+
     int m_currentRow;
     LotusLeaf* m_currentLeaf;
     QPointF m_frogPos;
@@ -73,8 +76,9 @@ private:
     QString m_inputBuffer;
 
     QTimer* m_physicsTimer;
+    QTimer* m_animTimer; // 【新增】控制呼吸动画
+    bool m_isCroaking;   // 【新增】当前是否处于鼓气状态
 
-    // 当前设置
     FrogSettingsData m_settings;
 };
 

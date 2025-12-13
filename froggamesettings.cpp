@@ -4,9 +4,8 @@
 #include <QFormLayout>
 #include <QPainter>
 #include <QDebug>
-#include <QAbstractItemView> // 【新增】用于设置下拉视图样式
+#include <QAbstractItemView> 
 
-// 【修改点 1】解决中文乱码 (必须放在所有 include 之后，代码之前)
 #if defined(_MSC_VER) && (_MSC_VER >= 1600)
 #pragma execution_character_set("utf-8")
 #endif
@@ -15,7 +14,6 @@ FrogGameSettings::FrogGameSettings(QWidget* parent) : QDialog(parent), m_isDragg
     setWindowFlags(Qt::FramelessWindowHint | Qt::Dialog);
     setAttribute(Qt::WA_TranslucentBackground);
 
-    // 加载背景
     m_bgPixmap.load(":/img/frog_setup.png");
     if (!m_bgPixmap.isNull()) {
         setFixedSize(m_bgPixmap.size());
@@ -24,7 +22,6 @@ FrogGameSettings::FrogGameSettings(QWidget* parent) : QDialog(parent), m_isDragg
         setFixedSize(400, 300);
     }
 
-    // 【修改点 2】将文件后缀由 .DAT 改为 .ID (因为ID文件里才是纯单词)
     m_courseMap << qMakePair(QString("新版小学英语"), QString("Grade.ID"));
     m_courseMap << qMakePair(QString("新版中学英语"), QString("Middle.ID"));
     m_courseMap << qMakePair(QString("新版高中英语"), QString("High.ID"));
@@ -44,7 +41,9 @@ FrogGameSettings::FrogGameSettings(QWidget* parent) : QDialog(parent), m_isDragg
 
 void FrogGameSettings::setupUI() {
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(180, 80, 50, 40);
+    // 【修改点 1】调整布局边距，对齐其他设置界面
+    // 之前是 180, 80... 现在改回标准的 120, 60... 
+    mainLayout->setContentsMargins(120, 60, 40, 30);
     mainLayout->setSpacing(20);
 
     QFormLayout* formLayout = new QFormLayout();
@@ -52,25 +51,23 @@ void FrogGameSettings::setupUI() {
     formLayout->setHorizontalSpacing(15);
     formLayout->setVerticalSpacing(25);
 
-    // 1. 选择课程 (ComboBox)
     m_comboCourse = new QComboBox();
     m_comboCourse->setFixedSize(180, 25);
     for (const auto& pair : m_courseMap) {
         m_comboCourse->addItem(pair.first, pair.second);
     }
 
-    // 【修改点 3】强制设置字体颜色为黑色，包括下拉列表项
-    // QComboBox: 主控件样式
-    // QComboBox QAbstractItemView: 下拉列表样式
+    // 【修改点 2】QSS 增加按钮按下的图片切换
     m_comboCourse->setStyleSheet(
         "QComboBox {"
         "    border: 1px solid gray;"
         "    border-radius: 3px;"
         "    padding: 1px 18px 1px 3px;"
         "    background: white;"
-        "    color: black;"           // 默认文字黑色
-        "    selection-color: black;" // 选中文字黑色
+        "    color: black;"
+        "    selection-color: black;"
         "}"
+        // 下拉按钮区域
         "QComboBox::drop-down {"
         "    subcontrol-origin: padding;"
         "    subcontrol-position: top right;"
@@ -79,26 +76,33 @@ void FrogGameSettings::setupUI() {
         "    border-left-color: darkgray;"
         "    border-left-style: solid;"
         "}"
+        // 箭头图标 - 正常状态
+        "QComboBox::down-arrow {"
+        "    image: url(:/img/dropdown_button.bmp);"
+        "}"
+        // 【新增】箭头图标 - 按下/打开状态
+        "QComboBox::down-arrow:on {"
+        "    image: url(:/img/dropdown_button_pressed.bmp);"
+        "    top: 1px; left: 1px;" // 微微偏移增加按压感
+        "}"
         "QComboBox QAbstractItemView {"
-        "    color: black;"             // 下拉项文字黑色
-        "    background-color: white;"  // 下拉项背景白色
-        "    selection-color: black;"   // 鼠标悬停选中项文字黑色
-        "    selection-background-color: #E0E0E0;" // 鼠标悬停选中项背景浅灰
+        "    color: black;"
+        "    background-color: white;"
+        "    selection-color: black;"
+        "    selection-background-color: #E0E0E0;"
         "}"
     );
 
     QLabel* l1 = new QLabel("选择课程:");
-    l1->setStyleSheet("font-family: 'SimSun'; font-size: 14px; color: black;"); // 确保Label也是黑色
+    l1->setStyleSheet("font-family: 'SimSun'; font-size: 14px; color: black; font-weight: bold;");
     formLayout->addRow(l1, m_comboCourse);
 
-    // 2. 难度等级 (Slider 1-9)
     m_sliderDiff = new QSlider(Qt::Horizontal);
     m_sliderDiff->setRange(1, 9);
     setupSliderStyle(m_sliderDiff);
 
     m_labelDiff = new QLabel("1");
     m_labelDiff->setFixedWidth(30);
-    // 确保数字也是黑色
     m_labelDiff->setStyleSheet("color: black; font-weight: bold;");
 
     QHBoxLayout* row2 = new QHBoxLayout();
@@ -106,7 +110,7 @@ void FrogGameSettings::setupUI() {
     row2->addWidget(m_labelDiff);
 
     QLabel* l2 = new QLabel("难度等级:");
-    l2->setStyleSheet("font-family: 'SimSun'; font-size: 14px; color: black;");
+    l2->setStyleSheet("font-family: 'SimSun'; font-size: 14px; color: black; font-weight: bold;");
     formLayout->addRow(l2, row2);
 
     mainLayout->addLayout(formLayout);
@@ -115,7 +119,7 @@ void FrogGameSettings::setupUI() {
     // 按钮区域
     QHBoxLayout* btnLayout = new QHBoxLayout();
     btnLayout->setSpacing(10);
-    btnLayout->addStretch();
+    btnLayout->addStretch(); // 弹簧把按钮顶到右边
 
     m_btnOk = new ImageButton(":/img/ok.bmp", ":/img/ok_hover.bmp", ":/img/ok_pressed.bmp", this);
     m_btnCancel = new ImageButton(":/img/cancel.bmp", ":/img/cancel_hover.bmp", ":/img/cancel_pressed.bmp", this);
@@ -127,8 +131,8 @@ void FrogGameSettings::setupUI() {
     mainLayout->addLayout(btnLayout);
 }
 
-// ... setupSliderStyle, paintEvent 等其他函数保持不变 ...
-// 注意：onDefaultClicked 中也要把默认文件改为 .ID
+// ... 剩余代码保持不变 ...
+// (setupSliderStyle, paintEvent, mouseEvents, setSettings, getSettings, slots)
 
 void FrogGameSettings::setupSliderStyle(QSlider* slider) {
     slider->setStyleSheet(
@@ -160,7 +164,6 @@ void FrogGameSettings::mouseMoveEvent(QMouseEvent* event) {
 void FrogGameSettings::setSettings(const FrogSettingsData& s) {
     m_sliderDiff->setValue(s.difficulty);
     m_labelDiff->setText(QString::number(s.difficulty));
-
     int idx = m_comboCourse->findData(s.dictionaryFile);
     if (idx != -1) m_comboCourse->setCurrentIndex(idx);
 }
@@ -180,6 +183,6 @@ void FrogGameSettings::onDifficultyChanged(int value) {
 void FrogGameSettings::onDefaultClicked() {
     FrogSettingsData d;
     d.difficulty = 1;
-    d.dictionaryFile = "4W.ID"; // 【修改】默认也改为 .ID
+    d.dictionaryFile = "4W.ID";
     setSettings(d);
 }
