@@ -4,9 +4,8 @@
 
 // 地鼠洞坐标配置
 const QPoint molePositions[9] = {
-    QPoint(130, 290), QPoint(320, 290), QPoint(510, 290),
-    QPoint(100, 330), QPoint(290, 330), QPoint(480, 330),
-    QPoint(140, 370), QPoint(330, 370), QPoint(520, 370)
+    QPoint(30, 330), QPoint(230, 330), QPoint(430, 330), QPoint(640, 330),
+    QPoint(30, 140), QPoint(230, 140), QPoint(430, 140), QPoint(640, 140)
 };
 
 MoleGame::MoleGame(QObject *parent) : GameBase(parent) {
@@ -137,17 +136,15 @@ void MoleGame::draw(QPainter &painter) {
     painter.setFont(QFont("Arial", 12));
     
     // 时间
-    painter.drawText(600, 520, "限时:");
-    painter.drawText(640, 520, QString::number(m_settings.gameTimeSec / 60) + " 分");
-    painter.drawText(720, 520, QString("%1s").arg(m_remainingTimeSec));
+    painter.drawText(603, 540, QString::number(m_settings.gameTimeSec / 60));
+    painter.drawText(720, 540, QString("%1s").arg(m_remainingTimeSec));
 
     // 正确率
-    painter.drawText(610, 545, "正确率:");
     double accuracy = (m_totalSpawns == 0) ? 0.0 : (double)m_hitCount / m_totalSpawns * 100.0;
-    painter.drawText(670, 545, QString("%1%").arg((int)accuracy));
+    painter.drawText(610, 570, QString("%1%").arg((int)accuracy));
 
     // 击中次数
-    painter.drawText(730, 550, QString::number(m_hitCount));
+    painter.drawText(730, 570, QString::number(m_hitCount));
 }
 
 void MoleGame::handleKeyPress(QKeyEvent *event) {

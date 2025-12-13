@@ -47,23 +47,23 @@ void GameWidget::setupMainMenu() {
     connect(m_btnMole, &QPushButton::clicked, this, &GameWidget::onSelectMoleGame);
 
     m_btnPolice = new QPushButton(QStringLiteral("生死时速"), this);
-    m_btnPolice->setGeometry(300, 280, 200, 50);
+    m_btnPolice->setGeometry(300, 260, 200, 50);
     connect(m_btnPolice, &QPushButton::clicked, this, &GameWidget::onSelectPoliceGame);
 
     m_btnSpace = new QPushButton(QStringLiteral("太空大战"), this);
-    m_btnSpace->setGeometry(300, 360, 200, 50); 
+    m_btnSpace->setGeometry(300, 320, 200, 50); 
     connect(m_btnSpace, &QPushButton::clicked, this, &GameWidget::onSelectSpaceGame);
 
     m_btnApple = new QPushButton(QStringLiteral("拯救苹果"), this);
-    m_btnApple->setGeometry(300, 320, 200, 50); 
+    m_btnApple->setGeometry(300, 380, 200, 50); 
     connect(m_btnApple, &QPushButton::clicked, this, &GameWidget::onSelectAppleGame);
 
     m_btnFrog = new QPushButton(QStringLiteral("激流勇进"), this);
-    m_btnFrog->setGeometry(300, 380, 200, 50); // 调整位置
+    m_btnFrog->setGeometry(300, 440, 200, 50); // 调整位置
     connect(m_btnFrog, &QPushButton::clicked, this, &GameWidget::onSelectFrogGame);
 
     m_btnExit = new QPushButton(QStringLiteral("退出程序"), this);
-    m_btnExit->setGeometry(300, 440, 200, 50);
+    m_btnExit->setGeometry(300, 500, 200, 50);
     connect(m_btnExit, &QPushButton::clicked, this, &GameWidget::onExitApp);
 }
 
