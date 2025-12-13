@@ -206,8 +206,12 @@
 	<file alias="img/space_enemy_0.png">Space/Images/SPACE_ENEMY_0.png</file>
 	<file alias="img/space_enemy_4.png">Space/Images/SPACE_ENEMY_4.png</file>
 	<file alias="img/space_exit.png">Space/Images/SPACE_EXIT.png</file>
+	<file alias="img/space_exit_hover.png">Space/Images/SPACE_EXIT_hover.png</file>
+	<file alias="img/space_exit_pressed.png">Space/Images/SPACE_EXIT_pressed.png</file>
 	<file alias="img/space_explosion_0.png">Space/Images/SPACE_EXPLOSION_0.png</file>
 	<file alias="img/space_hiscore.png">Space/Images/SPACE_HISCORE.png</file>
+	<file alias="img/space_hiscore_hover.png">Space/Images/SPACE_HISCORE_hover.png</file>
+	<file alias="img/space_hiscore_pressed.png">Space/Images/SPACE_HISCORE_pressed.png</file>
 	<file alias="img/space_hiscore_bg.png">Space/Images/SPACE_HISCORE_BG.png</file>
 	<file alias="img/space_label_life.png">Space/Images/SPACE_LABEL_LIFE.png</file>
 	<file alias="img/space_label_score.png">Space/Images/SPACE_LABEL_SCORE.png</file>
@@ -216,10 +220,16 @@
 	<file alias="img/space_life_over.png">Space/Images/SPACE_LIFE_OVER.png</file>
 	<file alias="img/space_mainmenu_bg.png">Space/Images/SPACE_MAINMENU_BG.png</file>
 	<file alias="img/space_option.png">Space/Images/SPACE_OPTION.png</file>
+	<file alias="img/space_option_hover.png">Space/Images/SPACE_OPTION_hover.png</file>
+	<file alias="img/space_option_pressed.png">Space/Images/SPACE_OPTION_pressed.png</file>
 	<file alias="img/space_return.png">Space/Images/SPACE_RETURN.png</file>
+	<file alias="img/space_return_hover.png">Space/Images/SPACE_RETURN_hover.png</file>
+	<file alias="img/space_return_pressed.png">Space/Images/SPACE_RETURN_pressed.png</file>
 	<file alias="img/space_ship.png">Space/Images/SPACE_SHIP.png</file>
 	<file alias="img/space_stars.png">Space/Images/SPACE_STARS.png</file>
 	<file alias="img/space_start.png">Space/Images/SPACE_START.png</file>
+	<file alias="img/space_start_hover.png">Space/Images/SPACE_START_hover.png</file>
+	<file alias="img/space_start_pressed.png">Space/Images/SPACE_START_pressed.png</file>
 
 	<file alias="snd/space_bg.wav">Space/Sounds/SPACE_BG.wav</file>
 	<file alias="snd/space_blast.wav">Space/Sounds/SPACE_BLAST.wav</file>

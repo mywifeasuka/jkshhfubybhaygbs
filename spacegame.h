@@ -2,12 +2,13 @@
 #define SPACEGAME_H
 
 #include "gamebase.h"
+#include "spacegamesettings.h"
+#include "imagebutton.h"
 #include <QPixmap>
 #include <QList>
 #include <QPointF>
 #include <QtMultimedia/QSoundEffect>
 
-// 定义游戏中的物体类型
 enum EntityType {
     Type_Enemy,
     Type_Bullet,
@@ -16,45 +17,74 @@ enum EntityType {
 
 struct SpaceEntity {
     EntityType type;
-    QPointF pos;       // 位置
-    QPointF velocity;  // 速度向量
-    QString letter;    // 携带的字母（仅敌机有效）
-    int lifeTime;      // 存活时间（仅爆炸有效）
-    bool active;       // 是否存活
-    
-    // 构造函数
+    QPointF pos;
+    QPointF velocity;
+    QString letter;
+    int lifeTime;
+    bool active;
+
     SpaceEntity(EntityType t, QPointF p, QPointF v, QString l = "")
-        : type(t), pos(p), velocity(v), letter(l), lifeTime(0), active(true) {}
+        : type(t), pos(p), velocity(v), letter(l), lifeTime(0), active(true) {
+    }
 };
 
 class SpaceGame : public GameBase {
     Q_OBJECT
 public:
-    explicit SpaceGame(QObject *parent = nullptr);
+    explicit SpaceGame(QObject* parent = nullptr);
     ~SpaceGame();
 
     void initGame() override;
     void startGame() override;
     void pauseGame() override;
     void stopGame() override;
-    void draw(QPainter &painter) override;
-    void handleKeyPress(QKeyEvent *event) override;
+    void draw(QPainter& painter) override;
+    void handleKeyPress(QKeyEvent* event) override;
+
+    // 继续游戏 (从菜单返回)
+    void resumeGame();
+
+signals:
+    void requestReturnToMenu(); // 请求返回主程序菜单
 
 private slots:
-    void onGameTick(); // 物理刷新
+    void onGameTick();
+
+    // 菜单按钮槽
+    void onBtnStartClicked();
+    void onBtnReturnClicked();
+    void onBtnOptionClicked();
+    void onBtnHiscoreClicked();
+    void onBtnExitClicked();
 
 private:
-    void spawnEnemy(); // 生成敌机
-    void spawnBullet(const QPointF& targetPos); // 发射子弹
-    void createExplosion(const QPointF& pos);   // 生成爆炸
+    void spawnEnemy();
+    void spawnBullet(const QPointF& targetPos);
+    void createExplosion(const QPointF& pos);
+
+    // 辅助：初始化内部UI
+    void setupInternalUI();
+    void showMenuUI(bool isPauseMode); // isPauseMode=true显示返回键，false显示开始键
+    void hideMenuUI();
 
     // --- 资源 ---
     QPixmap m_bgPixmap;
+    QPixmap m_menuBgPixmap; // 【新增】菜单背景
     QPixmap m_playerPixmap;
     QPixmap m_enemyPixmap;
-    QPixmap m_meteorPixmap; // 陨石图片 [cite: 515]
+    QPixmap m_meteorPixmap;
     QPixmap m_bulletPixmap;
     QPixmap m_explosionPixmap;
+
+    // --- 内部 UI 按钮 ---
+    ImageButton* m_btnStart;
+    ImageButton* m_btnReturn; // 暂停后显示的“返回”
+    ImageButton* m_btnOption;
+    ImageButton* m_btnHiscore;
+    ImageButton* m_btnExit;
+
+    SpaceGameSettings* m_settingsDialog;
+    SpaceSettingsData m_settings;
 
     // --- 音效 ---
     QSoundEffect* m_shootSound;
@@ -62,13 +92,14 @@ private:
     QSoundEffect* m_bgMusic;
 
     // --- 游戏数据 ---
-    QList<SpaceEntity*> m_entities; // 所有实体集合
-    QPointF m_playerPos;            // 玩家位置
-    int m_spawnTimer;               // 生成计时器
-    int m_spawnInterval;            // 生成间隔（随难度减少）
-    int m_difficultyTimer;          // 难度增加计时
-    
-    QTimer *m_physicsTimer;
+    QList<SpaceEntity*> m_entities;
+    QPointF m_playerPos;
+    int m_spawnTimer;
+    int m_spawnInterval;
+    int m_difficultyTimer;
+    int m_lives; // 生命值
+
+    QTimer* m_physicsTimer;
 };
 
 #endif // SPACEGAME_H

@@ -53,6 +53,8 @@ set(PROJECT_SOURCES
     applegamesettings.cpp
     froggamesettings.h
     froggamesettings.cpp
+    spacegamesettings.h
+    spacegamesettings.cpp
 )
 
 set(PROJECT_RESOURCES
