@@ -14,22 +14,21 @@
 ImageCheckBox::ImageCheckBox(QWidget* parent)
     : QWidget(parent), m_checked(false), m_isHover(false)
 {
-    setFixedSize(20, 20); // 默认大小，加载图片后会更新
+    setFixedSize(20, 20);
     setCursor(Qt::PointingHandCursor);
 }
 
 void ImageCheckBox::loadImages(const QString& basePath) {
-    // 假设资源后缀是 .bmp (根据原版资源习惯)
-    // 0: 初始 -> .bmp
-    m_pixmaps[0].load(basePath + ".bmp");
-    // 1: 移入 -> _1.bmp
-    m_pixmaps[1].load(basePath + "_1.bmp");
-    // 2: 选中 -> _2.bmp
-    m_pixmaps[2].load(basePath + "_2.bmp");
-    // 3: 选中移入 -> _3.bmp
-    m_pixmaps[3].load(basePath + "_3.bmp");
+    // 【修改点 3】 资源后缀改为 .png
+    // 0: 初始 -> .png
+    m_pixmaps[0].load(basePath + ".png");
+    // 1: 移入 -> _1.png
+    m_pixmaps[1].load(basePath + "_1.png");
+    // 2: 选中 -> _2.png
+    m_pixmaps[2].load(basePath + "_2.png");
+    // 3: 选中移入 -> _3.png
+    m_pixmaps[3].load(basePath + "_3.png");
 
-    // 根据第一张图调整大小
     if (!m_pixmaps[0].isNull()) {
         setFixedSize(m_pixmaps[0].size());
     }
@@ -48,7 +47,6 @@ void ImageCheckBox::paintEvent(QPaintEvent*) {
     QPainter painter(this);
     int index = 0;
 
-    // 逻辑：0=关, 1=关hover, 2=开, 3=开hover
     if (m_checked) {
         index = m_isHover ? 3 : 2;
     }
@@ -56,7 +54,6 @@ void ImageCheckBox::paintEvent(QPaintEvent*) {
         index = m_isHover ? 1 : 0;
     }
 
-    // 容错：如果对应的状态图不存在，回退到基础图(0)
     if (m_pixmaps[index].isNull()) {
         if (m_checked && !m_pixmaps[2].isNull()) index = 2;
         else index = 0;
@@ -79,7 +76,7 @@ void ImageCheckBox::leaveEvent(QEvent*) {
 
 void ImageCheckBox::mousePressEvent(QMouseEvent* event) {
     if (event->button() == Qt::LeftButton) {
-        setChecked(!m_checked); // 切换状态
+        setChecked(!m_checked);
     }
 }
 
@@ -105,7 +102,6 @@ SpaceGameSettings::SpaceGameSettings(QWidget* parent) : QDialog(parent), m_isDra
 
 void SpaceGameSettings::setupUI() {
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    // 调整边距以适配背景图 (左, 上, 右, 下)
     mainLayout->setContentsMargins(120, 50, 40, 20);
     mainLayout->setSpacing(10);
 
@@ -150,7 +146,6 @@ void SpaceGameSettings::setupUI() {
     QHBoxLayout* row3 = new QHBoxLayout();
 
     m_checkBonus = new ImageCheckBox(this);
-    // 加载资源：checkbox_button.bmp, checkbox_button_1.bmp 等
     m_checkBonus->loadImages(":/img/checkbox_button");
 
     row3->addWidget(m_checkBonus);
@@ -160,18 +155,16 @@ void SpaceGameSettings::setupUI() {
     l3->setStyleSheet("font-family: 'SimSun'; font-size: 14px; font-weight: bold; color: #333;");
     formLayout->addRow(l3, row3);
 
-    // 4. 奖励模式说明文字
-    // 插入一个单独的布局来显示说明，使其与复选框对齐
+    // 4. 说明文字
     m_labelBonusDesc = new QLabel("选中此项，游戏过程中\n将出现加分奖励物体。", this);
     m_labelBonusDesc->setStyleSheet("color: #666; font-size: 12px; font-family: 'SimSun';");
 
-    // 为了对齐，我们在左侧加一个 spacer，宽度等于Label宽度+间距
     QHBoxLayout* descLayout = new QHBoxLayout();
-    descLayout->addSpacing(80); // 这里的80大概是 "奖励模式:" Label 的宽度
+    descLayout->addSpacing(80);
     descLayout->addWidget(m_labelBonusDesc);
 
     mainLayout->addLayout(formLayout);
-    mainLayout->addLayout(descLayout); // 加在 FormLayout 下方
+    mainLayout->addLayout(descLayout);
 
     mainLayout->addStretch();
 

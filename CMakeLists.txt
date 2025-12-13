@@ -55,6 +55,8 @@ set(PROJECT_SOURCES
     froggamesettings.cpp
     spacegamesettings.h
     spacegamesettings.cpp
+    spacenamedialog.h
+    spacenamedialog.cpp
 )
 
 set(PROJECT_RESOURCES

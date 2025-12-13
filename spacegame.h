@@ -4,6 +4,7 @@
 #include "gamebase.h"
 #include "spacegamesettings.h"
 #include "imagebutton.h"
+#include "spacenamedialog.h" // 【新增】
 #include <QPixmap>
 #include <QList>
 #include <QPointF>
@@ -19,12 +20,13 @@ struct SpaceEntity {
     EntityType type;
     QPointF pos;
     QPointF velocity;
+    double initialX;   // 【新增】用于S型移动的基准X坐标
     QString letter;
     int lifeTime;
     bool active;
 
     SpaceEntity(EntityType t, QPointF p, QPointF v, QString l = "")
-        : type(t), pos(p), velocity(v), letter(l), lifeTime(0), active(true) {
+        : type(t), pos(p), velocity(v), initialX(p.x()), letter(l), lifeTime(0), active(true) {
     }
 };
 
@@ -41,11 +43,10 @@ public:
     void draw(QPainter& painter) override;
     void handleKeyPress(QKeyEvent* event) override;
 
-    // 继续游戏 (从菜单返回)
     void resumeGame();
 
 signals:
-    void requestReturnToMenu(); // 请求返回主程序菜单
+    void requestReturnToMenu();
 
 private slots:
     void onGameTick();
@@ -56,55 +57,64 @@ private slots:
     void onBtnOptionClicked();
     void onBtnHiscoreClicked();
     void onBtnExitClicked();
-
     void onBtnGamePauseClicked();
 
 private:
     void spawnEnemy();
     void spawnBullet(const QPointF& targetPos);
     void createExplosion(const QPointF& pos);
+    void checkCollisions(); // 【新增】碰撞检测
+    void drawHUD(QPainter& painter); // 【新增】绘制顶部条
+    void handleGameOver(); // 【新增】游戏结束处理
+    void saveScore(const QString& name, int score); // 【新增】保存成绩
 
-    // 辅助：初始化内部UI
     void setupInternalUI();
-    void showMenuUI(bool isPauseMode); // isPauseMode=true显示返回键，false显示开始键
+    void showMenuUI(bool isPauseMode);
     void hideMenuUI();
-
     void showGameUI();
     void hideGameUI();
 
     // --- 资源 ---
     QPixmap m_bgPixmap;
-    QPixmap m_menuBgPixmap; // 【新增】菜单背景
+    QPixmap m_menuBgPixmap;
     QPixmap m_playerPixmap;
     QPixmap m_enemyPixmap;
     QPixmap m_meteorPixmap;
     QPixmap m_bulletPixmap;
     QPixmap m_explosionPixmap;
 
-    // --- 内部 UI 按钮 ---
+    // 【新增】HUD 资源
+    QPixmap m_hudLabelScore;
+    QPixmap m_hudLabelLife;
+    QPixmap m_hudLabelTime;
+    QPixmap m_hudLifeIcon; // 生命条图标
+
     ImageButton* m_btnStart;
-    ImageButton* m_btnReturn; // 暂停后显示的“返回”
+    ImageButton* m_btnReturn;
     ImageButton* m_btnOption;
     ImageButton* m_btnHiscore;
     ImageButton* m_btnExit;
-
     ImageButton* m_btnGamePause;
 
     SpaceGameSettings* m_settingsDialog;
     SpaceSettingsData m_settings;
 
-    // --- 音效 ---
     QSoundEffect* m_shootSound;
     QSoundEffect* m_explodeSound;
     QSoundEffect* m_bgMusic;
 
-    // --- 游戏数据 ---
     QList<SpaceEntity*> m_entities;
     QPointF m_playerPos;
+
+    // 计时器与难度
     int m_spawnTimer;
     int m_spawnInterval;
-    int m_difficultyTimer;
-    int m_lives; // 生命值
+    int m_lives;
+
+    // 【新增】
+    int m_gameTimeFrames; // 倒计时 (帧)
+    int m_difficultyLevel; // 当前难度等级
+    double m_playerDir;   // 玩家移动方向 (1.0 或 -1.0)
 
     QTimer* m_physicsTimer;
 };
