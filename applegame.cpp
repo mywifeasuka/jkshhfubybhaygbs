@@ -1,30 +1,26 @@
-﻿    #include "applegame.h"
+﻿#include "applegame.h"
 #include <QRandomGenerator>
 #include <QDebug>
 #include <QtMath>
 
-// 游戏配置
+// ... 常量定义保持不变 ...
 const int GAME_FPS = 60;
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
-const int FLOOR_Y = 520; // 判定落地的Y坐标 (篮子大概在这个高度)
 
-AppleGame::AppleGame(QObject *parent) : GameBase(parent) {
-    // 1. 加载资源 (请确保 qrc 中有这些图片)
-    // 注意：根据之前的资源列表，背景图路径可能需要根据你的实际 qrc 调整
+AppleGame::AppleGame(QObject* parent) : GameBase(parent) {
+    // ... 资源加载代码保持不变 ...
     m_bgPixmap.load(":/img/apple_background.png");
     m_applePixmap.load(":/img/apple_normal.png");
     m_basketPixmap.load(":/img/apple_basket.png");
 
-    // 2. 音效
     m_catchSound = new QSoundEffect(this);
     m_catchSound->setSource(QUrl::fromLocalFile(":/snd/apple_in.wav"));
-    
+
     m_bgMusic = new QSoundEffect(this);
     m_bgMusic->setSource(QUrl::fromLocalFile(":/snd/apple_bg.wav"));
     m_bgMusic->setLoopCount(QSoundEffect::Infinite);
 
-    // 3. 物理定时器 (60 FPS)
     m_physicsTimer = new QTimer(this);
     m_physicsTimer->setInterval(1000 / GAME_FPS);
     connect(m_physicsTimer, &QTimer::timeout, this, &AppleGame::onGameTick);
@@ -35,20 +31,35 @@ AppleGame::~AppleGame() {
     m_apples.clear();
 }
 
+// 【新增】更新设置
+void AppleGame::updateSettings(const AppleSettingsData& settings) {
+    m_settings = settings;
+}
+
 void AppleGame::initGame() {
     m_state = GameState::Ready;
     m_score = 0;
-    m_lives = 5; // 初始5条命
-    
+    m_caughtCount = 0; // 重置接住数量
+
+    // 【修改】使用设置中的生命值
+    m_lives = m_settings.failCount;
+
     qDeleteAll(m_apples);
     m_apples.clear();
 
-    // 篮子初始在中间
     m_basketPos = QPointF(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 80);
-    
+
     m_spawnTimer = 0;
-    m_spawnInterval = 100; // 初始约1.6秒生成一个
-    m_currentBaseSpeed = 1.5; // 初始速度 (像素/帧)
+
+    // 【修改】根据“游戏等级”设置初始难度
+    // 等级越高，生成越快，下落越快
+    // 假设等级 1-10
+    // 生成间隔: Level 1 -> 120帧(2s), Level 10 -> 40帧(0.6s)
+    m_spawnInterval = 120 - (m_settings.level - 1) * 8;
+    if (m_spawnInterval < 30) m_spawnInterval = 30;
+
+    // 基础速度: Level 1 -> 1.5, Level 10 -> 4.5
+    m_currentBaseSpeed = 1.5 + (m_settings.level - 1) * 0.3;
 
     emit scoreChanged(0);
 }
@@ -62,56 +73,60 @@ void AppleGame::startGame() {
     }
 }
 
+// ... pauseGame 保持不变 ...
 void AppleGame::pauseGame() {
     if (m_state == GameState::Playing) {
         m_state = GameState::Paused;
         m_physicsTimer->stop();
         m_bgMusic->stop();
-    } else if (m_state == GameState::Paused) {
+    }
+    else if (m_state == GameState::Paused) {
         m_state = GameState::Playing;
         m_physicsTimer->start();
         m_bgMusic->play();
     }
 }
 
+// 【修复】结束游戏时清空屏幕
 void AppleGame::stopGame() {
     m_state = GameState::GameOver;
     m_physicsTimer->stop();
     m_bgMusic->stop();
+
+    // 清除所有苹果，确保重绘时屏幕干净
+    qDeleteAll(m_apples);
+    m_apples.clear();
 }
 
 void AppleGame::onGameTick() {
-    // 1. 生成逻辑
+    // 1. 胜利判定 (接住数量达到设定值)
+    if (m_caughtCount >= m_settings.targetCount) {
+        stopGame();
+        emit gameFinished(m_score, true); // 胜利！
+        return;
+    }
+
+    // 2. 生成逻辑
     m_spawnTimer++;
     if (m_spawnTimer >= m_spawnInterval) {
         spawnApple();
         m_spawnTimer = 0;
-        
-        // 难度动态增加逻辑：
-        // 每生成一个，间隔缩短一点点，最快 30帧(0.5秒)一个
-        if (m_spawnInterval > 40) m_spawnInterval -= 1; 
-        
-        // 速度也会微量增加
-        if (m_currentBaseSpeed < 5.0) m_currentBaseSpeed += 0.02;
+        // 动态难度微调 (在当前等级基础上微调)
+        // 注意不要减得太快，否则高等级下瞬间没法玩
+        if (m_spawnInterval > 20) m_spawnInterval--;
     }
 
-    // 2. 更新所有苹果位置
+    // 3. 更新物理
     updateApples();
 }
 
 void AppleGame::spawnApple() {
-    // 随机X坐标，留出边距防止画在屏幕外
+    // ... 保持原有逻辑 ...
     int margin = 60;
     int x = QRandomGenerator::global()->bounded(margin, SCREEN_WIDTH - margin);
-    
-    // 随机字母
     char letter = 'A' + QRandomGenerator::global()->bounded(26);
-    
-    // 生成：Y坐标从 -50 开始掉落
-    // 速度在基础速度上有微小波动，显得更自然
     double speedVariance = QRandomGenerator::global()->bounded(0.5);
     Apple* apple = new Apple(QPointF(x, -50), m_currentBaseSpeed + speedVariance, QString(letter));
-    
     m_apples.append(apple);
 }
 
@@ -119,42 +134,39 @@ void AppleGame::updateApples() {
     for (Apple* apple : m_apples) {
         if (!apple->active) continue;
 
-        // *** 核心修改：匀速下落 ***
         apple->pos.setY(apple->pos.y() + apple->speed);
 
-        // 落地检测 (漏接)
+        // 落地检测 (失败判定)
         if (apple->pos.y() > SCREEN_HEIGHT) {
             apple->active = false;
             m_lives--;
-            
-            // 这里可以加一个 "apple_bad" 的音效
-            
+            // 这里可以播放 miss 音效
+
             if (m_lives <= 0) {
                 stopGame();
-                emit gameFinished(m_score, false); // false 代表失败
+                emit gameFinished(m_score, false); // 失败
             }
         }
     }
 
-    // 内存清理：移除不活跃的苹果
+    // 清理
     for (auto it = m_apples.begin(); it != m_apples.end(); ) {
         if (!(*it)->active) {
-            delete *it;
+            delete* it;
             it = m_apples.erase(it);
-        } else {
+        }
+        else {
             ++it;
         }
     }
 }
 
-void AppleGame::handleKeyPress(QKeyEvent *event) {
+void AppleGame::handleKeyPress(QKeyEvent* event) {
     if (m_state != GameState::Playing) return;
 
     QString text = event->text().toUpper();
     if (text.isEmpty()) return;
 
-    // 寻找匹配的苹果
-    // 策略：如果有多个相同的字母，优先消除离地面最近的那个 (Y值最大)
     Apple* target = nullptr;
     double maxY = -1000.0;
 
@@ -168,72 +180,51 @@ void AppleGame::handleKeyPress(QKeyEvent *event) {
     }
 
     if (target) {
-        // 接住成功
-        target->active = false; // 标记为死亡，下一帧清理
+        target->active = false;
         m_score += 10;
+        m_caughtCount++; // 增加接住计数
         m_catchSound->play();
-        
-        // 移动篮子到该苹果的 X 轴位置，增加视觉反馈
         m_basketPos.setX(target->pos.x());
-        
+
         emit scoreChanged(m_score);
     }
 }
 
-void AppleGame::draw(QPainter &painter) {
+void AppleGame::draw(QPainter& painter) {
+    // ... 绘图逻辑保持不变 ...
+    // 注意：UI绘制可以稍微修改一下，显示"目标"信息
+    // ... (背景、篮子、苹果绘制代码不变) ...
     painter.setRenderHint(QPainter::Antialiasing);
 
-    // 1. 绘制背景
-    if (!m_bgPixmap.isNull()) {
-        painter.drawPixmap(0, 0, m_bgPixmap);
-    } else {
-        painter.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, QColor(135, 206, 235)); // 没图就画个天蓝色
-    }
+    if (!m_bgPixmap.isNull()) painter.drawPixmap(0, 0, m_bgPixmap);
+    else painter.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, QColor(135, 206, 235));
 
-    // 2. 绘制篮子 (在底部跟随)
-    // Y轴固定在底部附近
     double basketY = SCREEN_HEIGHT - 80;
-    if (!m_basketPixmap.isNull()) {
-        painter.drawPixmap(m_basketPos.x() - m_basketPixmap.width()/2, 
-                           basketY, 
-                           m_basketPixmap);
-    } else {
-        // 没图画个框
-        painter.setBrush(Qt::yellow);
-        painter.drawRect(m_basketPos.x() - 40, basketY, 80, 40);
-    }
+    if (!m_basketPixmap.isNull()) painter.drawPixmap(m_basketPos.x() - m_basketPixmap.width() / 2, basketY, m_basketPixmap);
+    else { painter.setBrush(Qt::yellow); painter.drawRect(m_basketPos.x() - 40, basketY, 80, 40); }
 
-    // 3. 绘制苹果
     painter.setFont(QFont("Arial", 16, QFont::Bold));
-    
     for (Apple* apple : m_apples) {
         if (!apple->active) continue;
-
-        // 绘制苹果图片
-        if (!m_applePixmap.isNull()) {
-            painter.drawPixmap(apple->pos.x() - m_applePixmap.width()/2, 
-                               apple->pos.y() - m_applePixmap.height()/2, 
-                               m_applePixmap);
-        } else {
-            painter.setBrush(Qt::red);
-            painter.drawEllipse(apple->pos, 20, 20);
-        }
-        
-        // 绘制字母 (白色，居中)
+        if (!m_applePixmap.isNull()) painter.drawPixmap(apple->pos.x() - m_applePixmap.width() / 2, apple->pos.y() - m_applePixmap.height() / 2, m_applePixmap);
+        else { painter.setBrush(Qt::red); painter.drawEllipse(apple->pos, 20, 20); }
         painter.setPen(Qt::white);
         QRect textRect(apple->pos.x() - 20, apple->pos.y() - 20, 40, 40);
         painter.drawText(textRect, Qt::AlignCenter, apple->letter);
     }
 
-    // 4. UI 信息 (使用 QStringLiteral 避免中文乱码)
+    // UI 信息更新
     painter.setPen(Qt::black);
     painter.setFont(QFont("Microsoft YaHei", 14, QFont::Bold));
-    
-    // 左上角显示生命
-    QString lifeStr = QStringLiteral("生命值: ");
+
+    // 显示生命和进度
+    QString lifeStr = QStringLiteral("生命: ");
     painter.drawText(20, 40, lifeStr + QString::number(m_lives));
-    
-    // 右上角显示分数
+
+    // 显示目标进度
+    QString targetStr = QStringLiteral("目标: %1/%2").arg(m_caughtCount).arg(m_settings.targetCount);
+    painter.drawText(20, 70, targetStr);
+
     QString scoreStr = QStringLiteral("得分: ");
     painter.drawText(SCREEN_WIDTH - 150, 40, scoreStr + QString::number(m_score));
 }

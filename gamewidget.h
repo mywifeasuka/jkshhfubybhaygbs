@@ -7,6 +7,7 @@
 #include "gamebase.h"
 #include "gamesettings.h"
 #include "imagebutton.h"
+#include "applegamesettings.h"
 
 // 引入具体游戏类
 #include "molegame.h"
@@ -86,6 +87,7 @@ private:
     ImageButton* m_btnQuitGame;
     
     GameSettings* m_settingsDialog;
+    AppleGameSettings* m_appleSettingsDialog;
 
     QTimer* m_renderTimer;
 };

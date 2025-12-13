@@ -24,6 +24,7 @@ GameWidget::GameWidget(QWidget* parent)
 
     // 2. 初始化设置窗口
     m_settingsDialog = new GameSettings(this);
+    m_appleSettingsDialog = new AppleGameSettings(this);
 
     // 3. 初始化UI
     setupMainMenu();
@@ -268,41 +269,63 @@ void GameWidget::onPauseGame() {
     }
 }
 
+
 void GameWidget::onShowSettings() {
-    // 只有鼠的故事支持详细设置，这里做个转换判断
+    // 1. 判断是否是鼠的游戏
     MoleGame* moleGame = dynamic_cast<MoleGame*>(m_currentGame);
-    if (!moleGame) return; // 其他游戏暂不支持或不弹窗
-
-    // 记录旧设置，用于比较是否发生了改变
-    GameSettingsData oldSettings = m_settingsDialog->getSettings(); // 假设你在 GameSettings 中实现了 getSettings
-
-    // 显示设置窗口
-    if (m_settingsDialog->exec() == QDialog::Accepted) {
-        GameSettingsData newSettings = m_settingsDialog->getSettings();
-
-        // 比较设置是否改变 (简单比较几个关键字段)
-        bool changed = (oldSettings.gameTimeSec != newSettings.gameTimeSec) ||
-            (oldSettings.spawnIntervalMs != newSettings.spawnIntervalMs) ||
-            (oldSettings.stayTimeMs != newSettings.stayTimeMs);
-
-        if (changed) {
-            // 弹出“立即生效吗？”确认框
-            ConfirmationDialog dlg(ConfirmationDialog::Mode_ApplySettings, this);
-
-            if (dlg.exec() == QDialog::Accepted) {
-                // --- 点击“是”：应用设置并立即开始 ---
-                moleGame->updateSettings(newSettings);
-                moleGame->initGame(); // 重置游戏
-                onStartGame();        // 立即开始
-            }
-            else {
-                // --- 点击“否”：仅应用设置，不重启 ---
-                // 或者什么都不做？根据原版“否”通常是保存但不重置
-                moleGame->updateSettings(newSettings);
-                // 保持当前状态 (可能在 Ready 或 Paused)
+    if (moleGame) {
+        // ... 原有的鼠的游戏设置逻辑 ...
+        GameSettingsData oldSettings = m_settingsDialog->getSettings();
+        if (m_settingsDialog->exec() == QDialog::Accepted) {
+            GameSettingsData newSettings = m_settingsDialog->getSettings();
+            bool changed = (oldSettings.gameTimeSec != newSettings.gameTimeSec) ||
+                 (oldSettings.spawnIntervalMs != newSettings.spawnIntervalMs) ||
+                 (oldSettings.stayTimeMs != newSettings.stayTimeMs);
+            // ... 比较 ...
+            if (changed) {
+                ConfirmationDialog dlg(ConfirmationDialog::Mode_ApplySettings, this);
+                if (dlg.exec() == QDialog::Accepted) {
+                    moleGame->updateSettings(newSettings);
+                    moleGame->initGame();
+                    onStartGame();
+                }
+                else {
+                    moleGame->updateSettings(newSettings);
+                }
             }
         }
+        return;
     }
+
+    // 判断是否是苹果游戏
+    AppleGame* appleGame = dynamic_cast<AppleGame*>(m_currentGame);
+    if (appleGame) {
+        AppleSettingsData oldSettings = m_appleSettingsDialog->getSettings();
+
+        if (m_appleSettingsDialog->exec() == QDialog::Accepted) {
+            AppleSettingsData newSettings = m_appleSettingsDialog->getSettings();
+
+            // 简单比较是否改变
+            bool changed = (oldSettings.level != newSettings.level) ||
+                (oldSettings.targetCount != newSettings.targetCount) ||
+                (oldSettings.failCount != newSettings.failCount);
+
+            if (changed) {
+                ConfirmationDialog dlg(ConfirmationDialog::Mode_ApplySettings, this);
+                if (dlg.exec() == QDialog::Accepted) {
+                    appleGame->updateSettings(newSettings);
+                    appleGame->initGame();
+                    onStartGame();
+                }
+                else {
+                    appleGame->updateSettings(newSettings);
+                }
+            }
+        }
+        return;
+    }
+
+    // 其他游戏暂无设置，什么都不做
 }
 
 void GameWidget::updateButtons() {

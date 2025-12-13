@@ -49,6 +49,8 @@ set(PROJECT_SOURCES
     gameresultdialog.h
     confirmationdialog.cpp
     confirmationdialog.h
+    applegamesettings.h
+    applegamesettings.cpp
 )
 
 set(PROJECT_RESOURCES
