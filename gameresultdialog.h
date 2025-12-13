@@ -9,24 +9,27 @@ class GameResultDialog : public QDialog {
     Q_OBJECT
 
 public:
-    // 结果类型枚举
-    enum ResultAction {
-        Action_None,
-        Action_Replay,    // 继续 (重玩当前难度)
-        Action_NextLevel, // 下一关 (提高难度)
-        Action_End        // 结束 (回到游戏待机界面)
+    // 游戏主题类型
+    enum GameTheme {
+        Theme_Mole,
+        Theme_Apple
     };
 
-    explicit GameResultDialog(QWidget *parent = nullptr);
+    enum ResultAction {
+        Action_None,
+        Action_Replay,
+        Action_NextLevel,
+        Action_End
+    };
 
-    // 设置游戏结果：分数和是否胜利
+    // 构造函数增加 theme 参数
+    explicit GameResultDialog(GameTheme theme, QWidget* parent = nullptr);
+
     void setGameResult(int score, bool isWin);
-    
-    // 获取用户点击的操作
     ResultAction getSelectedAction() const { return m_selectedAction; }
 
 protected:
-    void paintEvent(QPaintEvent *event) override;
+    void paintEvent(QPaintEvent* event) override;
 
 private slots:
     void onReplayClicked();
@@ -36,16 +39,16 @@ private slots:
 private:
     void setupUI();
 
+    GameTheme m_currentTheme; // 当前主题
     QPixmap m_bgPixmap;
     ResultAction m_selectedAction;
 
-    // UI 元素
-    QLabel* m_messageLabel; // 显示"恭喜"或"认输"
-    QLabel* m_scoreLabel;   // 显示分数
-    
-    ImageButton* m_btnReplay; // 继续
-    ImageButton* m_btnNext;   // 下一关
-    ImageButton* m_btnEnd;    // 结束
+    QLabel* m_messageLabel;
+    QLabel* m_scoreLabel;
+
+    ImageButton* m_btnReplay;
+    ImageButton* m_btnNext;
+    ImageButton* m_btnEnd;
 };
 
 #endif // GAMERESULTDIALOG_H

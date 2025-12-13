@@ -162,8 +162,8 @@ void MoleGame::maintainMoleCount() {
         }
     }
 
-    // 目标保持 4 只
-    int needed = 4 - activeCount;
+    // 目标保持 3 只
+    int needed = 3 - activeCount;
     while (needed > 0 && !freeIndices.isEmpty()) {
         int randIdx = QRandomGenerator::global()->bounded(freeIndices.size());
         int moleIdx = freeIndices[randIdx];

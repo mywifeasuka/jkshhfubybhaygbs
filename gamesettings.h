@@ -11,7 +11,7 @@
 struct GameSettingsData {
     int gameTimeSec = 60;
     int spawnIntervalMs = 1000;
-    int stayTimeMs = 3000;
+    int stayTimeMs = 5000;
 };
 
 class GameSettings : public QDialog {

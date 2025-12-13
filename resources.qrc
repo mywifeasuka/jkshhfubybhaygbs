@@ -81,8 +81,14 @@
 	<file alias="img/apple_basket.png">Apple/Images/APPLE_BASKET.png</file>
 	<file alias="img/apple_dlg_bg.png">Apple/Images/APPLE_DLG_BG.png</file>
 	<file alias="img/apple_dlg_end.png">Apple/Images/APPLE_DLG_END.png</file>
+	<file alias="img/apple_dlg_end_hover.png">Apple/Images/APPLE_DLG_END_hover.png</file>
+	<file alias="img/apple_dlg_end_pressed.png">Apple/Images/APPLE_DLG_END_pressed.png</file>
 	<file alias="img/apple_dlg_next.png">Apple/Images/APPLE_DLG_NEXT.png</file>
+	<file alias="img/apple_dlg_next_hover.png">Apple/Images/APPLE_DLG_NEXT_hover.png</file>
+	<file alias="img/apple_dlg_next_pressed.png">Apple/Images/APPLE_DLG_NEXT_pressed.png</file>
 	<file alias="img/apple_dlg_replay.png">Apple/Images/APPLE_DLG_REPLAY.png</file>
+	<file alias="img/apple_dlg_replay_hover.png">Apple/Images/APPLE_DLG_REPLAY_hover.png</file>
+	<file alias="img/apple_dlg_replay_pressed.png">Apple/Images/APPLE_DLG_REPLAY_pressed.png</file>
 	<file alias="img/apple_normal.png">Apple/Images/APPLE_NORMAL.png</file>
 	<file alias="img/apple_small.png">Apple/Images/APPLE_SMALL.png</file>
 

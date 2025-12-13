@@ -371,39 +371,35 @@ void GameWidget::keyPressEvent(QKeyEvent* event) {
 }
 
 void GameWidget::onGameFinished(int score, bool win) {
-    // 1. 停止渲染循环 (确保背景静止)
     if (m_renderTimer->isActive()) {
         m_renderTimer->stop();
     }
 
-    // 2. 创建并显示自定义结算对话框
-    GameResultDialog dlg(this);
+    // 【修改】判断当前游戏类型
+    GameResultDialog::GameTheme theme = GameResultDialog::Theme_Mole; // 默认
+
+    // 如果是苹果游戏，切换主题
+    if (dynamic_cast<AppleGame*>(m_currentGame)) {
+        theme = GameResultDialog::Theme_Apple;
+    }
+
+    // 创建对话框并传入主题
+    GameResultDialog dlg(theme, this);
     dlg.setGameResult(score, win);
 
-    // 阻塞式显示对话框，等待用户点击
     dlg.exec();
 
-    // 3. 处理用户选择
+    // ... 后续处理逻辑不变 ...
     GameResultDialog::ResultAction action = dlg.getSelectedAction();
-
     if (action == GameResultDialog::Action_Replay) {
-        // --- 选项：继续 (重玩) ---
-        // 直接重新开始，参数不变
         onStartGame();
     }
     else if (action == GameResultDialog::Action_NextLevel) {
-        // --- 选项：下一关 ---
-        // 仅针对鼠的游戏增加难度 (需要类型转换或在GameBase加接口)
-        // 这里使用 dynamic_cast 安全转换
         MoleGame* moleGame = dynamic_cast<MoleGame*>(m_currentGame);
-        if (moleGame) {
-            moleGame->increaseDifficulty();
-        }
+        if (moleGame) moleGame->increaseDifficulty();
         onStartGame();
     }
     else {
-        // --- 选项：结束 (默认) ---
-        // 调用结束逻辑，重置画面
         onStopGameRound();
     }
 }

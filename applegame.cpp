@@ -13,6 +13,7 @@ AppleGame::AppleGame(QObject* parent) : GameBase(parent) {
     m_bgPixmap.load(":/img/apple_background.png");
     m_applePixmap.load(":/img/apple_normal.png");
     m_basketPixmap.load(":/img/apple_basket.png");
+    m_appleBadPixmap.load(":/img/apple_bad.png");
 
     m_catchSound = new QSoundEffect(this);
     m_catchSound->setSource(QUrl::fromLocalFile(":/snd/apple_in.wav"));
@@ -54,8 +55,8 @@ void AppleGame::initGame() {
     m_spawnInterval = 60 - (m_settings.level - 1) * 4;
     if (m_spawnInterval < 20) m_spawnInterval = 20; // 极限每0.3秒一波
 
-    // 基础速度: Level 1 -> 1.5, Level 10 -> 4.5
-    m_currentBaseSpeed = 0.8 + (m_settings.level - 1) * 0.2;
+    // 基础速度: Level 0.5 -> 1.5, Level 10 -> 2.3
+    m_currentBaseSpeed = 0.5 + (m_settings.level - 1) * 0.2;
 
     emit scoreChanged(0);
 }
@@ -160,32 +161,41 @@ void AppleGame::spawnApple() {
 }
 
 void AppleGame::updateApples() {
-    // 遍历所有苹果
     for (Apple* apple : m_apples) {
         if (!apple->active) continue;
 
+        // 如果已经是烂苹果，只处理停留计时
+        if (apple->isBad) {
+            apple->removeTimer--;
+            if (apple->removeTimer <= 0) {
+                apple->active = false; // 时间到，彻底移除
+            }
+            continue; // 烂苹果不移动，跳过移动逻辑
+        }
+
+        // 正常下落
         apple->pos.setY(apple->pos.y() + apple->speed);
 
-        // 落地检测
-        if (apple->pos.y() > SCREEN_HEIGHT) {
-            apple->active = false;
+        // 落地检测 (接触地面)
+        // 假设地面 Y 坐标约为 520 (篮子位置)
+        if (apple->pos.y() > 520) {
+            // 【修改】变为烂苹果状态，而不是直接 active=false
+            apple->isBad = true;
+            apple->removeTimer = 30; // 停留 30 帧 (约0.5秒)
+
+            // 扣血逻辑
             m_lives--;
 
             if (m_lives <= 0) {
-                stopGame(); // 这里清空了 m_apples 列表
-                emit gameFinished(m_score, false); // 弹出结算框
-
-                // 【关键修复点】：游戏结束了，列表已空，必须立即停止循环！
-                // 否则循环继续执行会导致访问非法内存 -> 崩溃
-                return;
+                stopGame();
+                emit gameFinished(m_score, false);
+                return; // 防止崩溃
             }
         }
     }
 
-    // 清理失效苹果 (垃圾回收)
-    // 同样加一个安全判断：如果游戏已经结束(列表为空)，就别清理了
+    // 清理逻辑不变 (active=false 的会被删掉)
     if (m_state != GameState::Playing) return;
-
     for (auto it = m_apples.begin(); it != m_apples.end(); ) {
         if (!(*it)->active) {
             delete* it;
@@ -228,8 +238,8 @@ void AppleGame::handleKeyPress(QKeyEvent* event) {
 }
 
 void AppleGame::draw(QPainter& painter) {
+    // ... 前面的背景、篮子绘制不变 ...
     painter.setRenderHint(QPainter::Antialiasing);
-
     if (!m_bgPixmap.isNull()) painter.drawPixmap(0, 0, m_bgPixmap);
     else painter.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, QColor(135, 206, 235));
 
@@ -237,27 +247,43 @@ void AppleGame::draw(QPainter& painter) {
     if (!m_basketPixmap.isNull()) painter.drawPixmap(m_basketPos.x() - m_basketPixmap.width() / 2, basketY, m_basketPixmap);
     else { painter.setBrush(Qt::yellow); painter.drawRect(m_basketPos.x() - 40, basketY, 80, 40); }
 
+    // 绘制苹果
     painter.setFont(QFont("Arial", 16, QFont::Bold));
+
     for (Apple* apple : m_apples) {
         if (!apple->active) continue;
-        if (!m_applePixmap.isNull()) painter.drawPixmap(apple->pos.x() - m_applePixmap.width() / 2, apple->pos.y() - m_applePixmap.height() / 2, m_applePixmap);
-        else { painter.setBrush(Qt::red); painter.drawEllipse(apple->pos, 20, 20); }
 
-        painter.setPen(Qt::white);
-        QRect textRect(apple->pos.x() - 20, apple->pos.y() - 20, 40, 40);
-        painter.drawText(textRect, Qt::AlignCenter, apple->letter);
+        // 【修改】根据状态选择图片
+        if (apple->isBad) {
+            // 绘制烂苹果
+            if (!m_appleBadPixmap.isNull()) {
+                painter.drawPixmap(apple->pos.x() - m_appleBadPixmap.width() / 2,
+                    apple->pos.y() - m_appleBadPixmap.height() / 2,
+                    m_appleBadPixmap);
+            }
+            // 烂苹果不需要画字母
+        }
+        else {
+            // 绘制正常苹果
+            if (!m_applePixmap.isNull()) {
+                painter.drawPixmap(apple->pos.x() - m_applePixmap.width() / 2,
+                    apple->pos.y() - m_applePixmap.height() / 2,
+                    m_applePixmap);
+            }
+            // 绘制字母
+            painter.setPen(Qt::white);
+            QRect textRect(apple->pos.x() - 20, apple->pos.y() - 20, 40, 40);
+            painter.drawText(textRect, Qt::AlignCenter, apple->letter);
+        }
     }
 
-    // UI 信息更新
+    // ... UI 文字绘制不变 ...
     painter.setPen(Qt::black);
     painter.setFont(QFont("Microsoft YaHei", 14, QFont::Bold));
-
     QString lifeStr = QStringLiteral("生命: ");
     painter.drawText(20, 40, lifeStr + QString::number(m_lives));
-
     QString targetStr = QStringLiteral("目标: %1/%2").arg(m_caughtCount).arg(m_settings.targetCount);
     painter.drawText(20, 70, targetStr);
-
     QString scoreStr = QStringLiteral("得分: ");
     painter.drawText(SCREEN_WIDTH - 150, 40, scoreStr + QString::number(m_score));
 }

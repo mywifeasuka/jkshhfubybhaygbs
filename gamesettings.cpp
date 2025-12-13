@@ -85,7 +85,7 @@ void GameSettings::setupUI() {
     stayTimeSlider->setRange(500, 5000);
     setupSliderStyle(stayTimeSlider);
 
-    stayTimeLabel = new QLabel("3000");
+    stayTimeLabel = new QLabel("5000");
     stayTimeLabel->setFixedWidth(50);
     stayTimeLabel->setAlignment(Qt::AlignCenter);
 
