@@ -31,7 +31,6 @@ AppleGame::~AppleGame() {
     m_apples.clear();
 }
 
-// 【新增】更新设置
 void AppleGame::updateSettings(const AppleSettingsData& settings) {
     m_settings = settings;
 }
@@ -39,9 +38,7 @@ void AppleGame::updateSettings(const AppleSettingsData& settings) {
 void AppleGame::initGame() {
     m_state = GameState::Ready;
     m_score = 0;
-    m_caughtCount = 0; // 重置接住数量
-
-    // 【修改】使用设置中的生命值
+    m_caughtCount = 0;
     m_lives = m_settings.failCount;
 
     qDeleteAll(m_apples);
@@ -51,15 +48,14 @@ void AppleGame::initGame() {
 
     m_spawnTimer = 0;
 
-    // 【修改】根据“游戏等级”设置初始难度
-    // 等级越高，生成越快，下落越快
-    // 假设等级 1-10
-    // 生成间隔: Level 1 -> 120帧(2s), Level 10 -> 40帧(0.6s)
-    m_spawnInterval = 120 - (m_settings.level - 1) * 8;
-    if (m_spawnInterval < 30) m_spawnInterval = 30;
+    // 【修改点 1】：大幅提高初始难度（加快生成频率）
+    // 原版: 120帧(2s) -> 现在: 60帧(1s) 起步，每升一级减少 4帧
+    // Level 3 (默认) -> 52帧 (不到1秒一波)
+    m_spawnInterval = 60 - (m_settings.level - 1) * 4;
+    if (m_spawnInterval < 20) m_spawnInterval = 20; // 极限每0.3秒一波
 
     // 基础速度: Level 1 -> 1.5, Level 10 -> 4.5
-    m_currentBaseSpeed = 1.5 + (m_settings.level - 1) * 0.3;
+    m_currentBaseSpeed = 0.8 + (m_settings.level - 1) * 0.2;
 
     emit scoreChanged(0);
 }
@@ -73,7 +69,6 @@ void AppleGame::startGame() {
     }
 }
 
-// ... pauseGame 保持不变 ...
 void AppleGame::pauseGame() {
     if (m_state == GameState::Playing) {
         m_state = GameState::Paused;
@@ -87,33 +82,59 @@ void AppleGame::pauseGame() {
     }
 }
 
-// 【修复】结束游戏时清空屏幕
 void AppleGame::stopGame() {
     m_state = GameState::GameOver;
     m_physicsTimer->stop();
     m_bgMusic->stop();
 
-    // 清除所有苹果，确保重绘时屏幕干净
     qDeleteAll(m_apples);
     m_apples.clear();
 }
 
 void AppleGame::onGameTick() {
-    // 1. 胜利判定 (接住数量达到设定值)
+    // 1. 胜利判定
     if (m_caughtCount >= m_settings.targetCount) {
         stopGame();
-        emit gameFinished(m_score, true); // 胜利！
+        emit gameFinished(m_score, true);
         return;
     }
 
     // 2. 生成逻辑
     m_spawnTimer++;
     if (m_spawnTimer >= m_spawnInterval) {
-        spawnApple();
+        // --- 多重生成逻辑 ---
+        int spawnCount = 1;
+
+        // 根据等级计算暴击概率 (1级0%, 3级20%, 10级90%)
+        int randomVal = QRandomGenerator::global()->bounded(100);
+        int extraChance = (m_settings.level - 1) * 10;
+
+        if (randomVal < extraChance) {
+            spawnCount++; // 变成 2 个
+        }
+        // 高等级(5级以上)才有可能出 3 个
+        if (m_settings.level >= 5 && randomVal < (extraChance - 40)) {
+            spawnCount++; // 变成 3 个
+        }
+
+        for (int i = 0; i < spawnCount; i++) {
+            spawnApple();
+        }
+
         m_spawnTimer = 0;
-        // 动态难度微调 (在当前等级基础上微调)
-        // 注意不要减得太快，否则高等级下瞬间没法玩
-        if (m_spawnInterval > 20) m_spawnInterval--;
+
+        // --- 【关键修改点】难度控制优化 ---
+
+        // 1. 设置更合理的极限值：最低 35 帧 (约0.6秒一波)，防止太快
+        int minInterval = 35;
+
+        // 2. 减缓增速：不再是每次生成都加速，而是有 10% 的概率加速
+        // 这样难度增长速度会变慢 10 倍，给玩家更多反应时间
+        if (m_spawnInterval > minInterval) {
+            if (QRandomGenerator::global()->bounded(10) == 0) {
+                m_spawnInterval--;
+            }
+        }
     }
 
     // 3. 更新物理
@@ -121,35 +142,50 @@ void AppleGame::onGameTick() {
 }
 
 void AppleGame::spawnApple() {
-    // ... 保持原有逻辑 ...
+    // 随机X坐标
     int margin = 60;
     int x = QRandomGenerator::global()->bounded(margin, SCREEN_WIDTH - margin);
+
     char letter = 'A' + QRandomGenerator::global()->bounded(26);
-    double speedVariance = QRandomGenerator::global()->bounded(0.5);
-    Apple* apple = new Apple(QPointF(x, -50), m_currentBaseSpeed + speedVariance, QString(letter));
+
+    // 【修改点 3】：增加 Y 轴随机偏移
+    // 这样如果一次生成多个，它们会有高低差，不会重叠在一起
+    int yOffset = QRandomGenerator::global()->bounded(100); // 0~100 的偏移
+
+    // 速度也有更大波动
+    double speedVariance = QRandomGenerator::global()->bounded(1.0); // 0~1.0 波动
+
+    Apple* apple = new Apple(QPointF(x, -50 - yOffset), m_currentBaseSpeed + speedVariance, QString(letter));
     m_apples.append(apple);
 }
 
 void AppleGame::updateApples() {
+    // 遍历所有苹果
     for (Apple* apple : m_apples) {
         if (!apple->active) continue;
 
         apple->pos.setY(apple->pos.y() + apple->speed);
 
-        // 落地检测 (失败判定)
+        // 落地检测
         if (apple->pos.y() > SCREEN_HEIGHT) {
             apple->active = false;
             m_lives--;
-            // 这里可以播放 miss 音效
 
             if (m_lives <= 0) {
-                stopGame();
-                emit gameFinished(m_score, false); // 失败
+                stopGame(); // 这里清空了 m_apples 列表
+                emit gameFinished(m_score, false); // 弹出结算框
+
+                // 【关键修复点】：游戏结束了，列表已空，必须立即停止循环！
+                // 否则循环继续执行会导致访问非法内存 -> 崩溃
+                return;
             }
         }
     }
 
-    // 清理
+    // 清理失效苹果 (垃圾回收)
+    // 同样加一个安全判断：如果游戏已经结束(列表为空)，就别清理了
+    if (m_state != GameState::Playing) return;
+
     for (auto it = m_apples.begin(); it != m_apples.end(); ) {
         if (!(*it)->active) {
             delete* it;
@@ -170,6 +206,7 @@ void AppleGame::handleKeyPress(QKeyEvent* event) {
     Apple* target = nullptr;
     double maxY = -1000.0;
 
+    // 优先消除离地面最近的
     for (Apple* apple : m_apples) {
         if (apple->active && apple->letter == text) {
             if (apple->pos.y() > maxY) {
@@ -182,7 +219,7 @@ void AppleGame::handleKeyPress(QKeyEvent* event) {
     if (target) {
         target->active = false;
         m_score += 10;
-        m_caughtCount++; // 增加接住计数
+        m_caughtCount++;
         m_catchSound->play();
         m_basketPos.setX(target->pos.x());
 
@@ -191,9 +228,6 @@ void AppleGame::handleKeyPress(QKeyEvent* event) {
 }
 
 void AppleGame::draw(QPainter& painter) {
-    // ... 绘图逻辑保持不变 ...
-    // 注意：UI绘制可以稍微修改一下，显示"目标"信息
-    // ... (背景、篮子、苹果绘制代码不变) ...
     painter.setRenderHint(QPainter::Antialiasing);
 
     if (!m_bgPixmap.isNull()) painter.drawPixmap(0, 0, m_bgPixmap);
@@ -208,6 +242,7 @@ void AppleGame::draw(QPainter& painter) {
         if (!apple->active) continue;
         if (!m_applePixmap.isNull()) painter.drawPixmap(apple->pos.x() - m_applePixmap.width() / 2, apple->pos.y() - m_applePixmap.height() / 2, m_applePixmap);
         else { painter.setBrush(Qt::red); painter.drawEllipse(apple->pos, 20, 20); }
+
         painter.setPen(Qt::white);
         QRect textRect(apple->pos.x() - 20, apple->pos.y() - 20, 40, 40);
         painter.drawText(textRect, Qt::AlignCenter, apple->letter);
@@ -217,11 +252,9 @@ void AppleGame::draw(QPainter& painter) {
     painter.setPen(Qt::black);
     painter.setFont(QFont("Microsoft YaHei", 14, QFont::Bold));
 
-    // 显示生命和进度
     QString lifeStr = QStringLiteral("生命: ");
     painter.drawText(20, 40, lifeStr + QString::number(m_lives));
 
-    // 显示目标进度
     QString targetStr = QStringLiteral("目标: %1/%2").arg(m_caughtCount).arg(m_settings.targetCount);
     painter.drawText(20, 70, targetStr);
 
