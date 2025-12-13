@@ -17,8 +17,6 @@ public:
 
     explicit ConfirmationDialog(Mode mode, QWidget *parent = nullptr);
 
-    // 获取用户的选择：Accepted (是/退出) 或 Rejected (否/继续)
-    // 我们复用 QDialog 的 exec() 返回值
 
 protected:
     void paintEvent(QPaintEvent *event) override;

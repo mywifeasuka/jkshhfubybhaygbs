@@ -4,7 +4,7 @@
 #include "gamebase.h"
 #include "spacegamesettings.h"
 #include "imagebutton.h"
-#include "spacenamedialog.h" // 【新增】
+#include "spacenamedialog.h" 
 #include <QPixmap>
 #include <QList>
 #include <QPointF>
@@ -20,13 +20,14 @@ struct SpaceEntity {
     EntityType type;
     QPointF pos;
     QPointF velocity;
-    double initialX;   // 【新增】用于S型移动的基准X坐标
-    QString letter;
+    double initialX;
+    QString letter;       // 敌机显示的字母
+    QString targetLetter; // 【新增】子弹追踪的目标字母
     int lifeTime;
     bool active;
 
     SpaceEntity(EntityType t, QPointF p, QPointF v, QString l = "")
-        : type(t), pos(p), velocity(v), initialX(p.x()), letter(l), lifeTime(0), active(true) {
+        : type(t), pos(p), velocity(v), initialX(p.x()), letter(l), targetLetter(""), lifeTime(0), active(true) {
     }
 };
 
@@ -51,7 +52,6 @@ signals:
 private slots:
     void onGameTick();
 
-    // 菜单按钮槽
     void onBtnStartClicked();
     void onBtnReturnClicked();
     void onBtnOptionClicked();
@@ -61,12 +61,16 @@ private slots:
 
 private:
     void spawnEnemy();
-    void spawnBullet(const QPointF& targetPos);
+    // 【修改】生成子弹时传入目标字母
+    void spawnBullet(const QPointF& startPos, const QString& targetLetter);
     void createExplosion(const QPointF& pos);
-    void checkCollisions(); // 【新增】碰撞检测
-    void drawHUD(QPainter& painter); // 【新增】绘制顶部条
-    void handleGameOver(); // 【新增】游戏结束处理
-    void saveScore(const QString& name, int score); // 【新增】保存成绩
+
+    // 【修改】返回 bool，true 表示游戏结束
+    bool checkCollisions();
+
+    void drawHUD(QPainter& painter);
+    void handleGameOver();
+    void saveScore(const QString& name, int score);
 
     void setupInternalUI();
     void showMenuUI(bool isPauseMode);
@@ -83,11 +87,10 @@ private:
     QPixmap m_bulletPixmap;
     QPixmap m_explosionPixmap;
 
-    // 【新增】HUD 资源
     QPixmap m_hudLabelScore;
     QPixmap m_hudLabelLife;
     QPixmap m_hudLabelTime;
-    QPixmap m_hudLifeIcon; // 生命条图标
+    QPixmap m_hudLifeIcon;
 
     ImageButton* m_btnStart;
     ImageButton* m_btnReturn;
@@ -106,15 +109,13 @@ private:
     QList<SpaceEntity*> m_entities;
     QPointF m_playerPos;
 
-    // 计时器与难度
     int m_spawnTimer;
     int m_spawnInterval;
     int m_lives;
 
-    // 【新增】
-    int m_gameTimeFrames; // 倒计时 (帧)
-    int m_difficultyLevel; // 当前难度等级
-    double m_playerDir;   // 玩家移动方向 (1.0 或 -1.0)
+    int m_gameTimeFrames;
+    int m_difficultyLevel;
+    double m_playerDir;
 
     QTimer* m_physicsTimer;
 };

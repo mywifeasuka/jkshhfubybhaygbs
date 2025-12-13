@@ -42,7 +42,7 @@ private:
     void spawnLeaves();
     void resetFrog();           // 重置青蛙位置（准备下一只）
     void retreatFrog();
-    void checkInput(const QString& key); // 修改：接收字符进行判定
+    void checkInput(const QString& key); // 接收字符进行判定
     void loadDictionary(const QString& filename);
 
     // --- 资源 ---
@@ -64,7 +64,7 @@ private:
     QList<LotusLeaf*> m_leaves;
     QStringList m_wordList;
 
-    int m_frogsRemaining; // 【修改】剩余待出场的青蛙总数 (初始5)
+    int m_frogsRemaining; // 剩余待出场的青蛙总数 (初始5)
     int m_successCount;   // 成功到达对岸的数量
 
     int m_currentRow;
@@ -74,7 +74,7 @@ private:
     QString m_goalWord;
     QString m_inputBuffer;
 
-    // 【新增】输入锁定机制
+    // 输入锁定机制
     LotusLeaf* m_lockedLeaf; // 当前锁定的荷叶
     bool m_isGoalLocked;     // 当前是否锁定了终点单词
 

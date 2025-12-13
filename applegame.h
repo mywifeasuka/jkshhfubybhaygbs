@@ -14,7 +14,7 @@ struct Apple {
     QString letter;
     bool active;
 
-    // 【新增】落地状态
+    // 落地状态
     bool isBad;      // 是否已经摔烂
     int removeTimer; // 摔烂后停留的帧数
 
@@ -25,7 +25,7 @@ struct Apple {
 
 class AppleGame : public GameBase {
     Q_OBJECT
-        // ... 其余公共接口保持不变 ...
+        
 public:
     explicit AppleGame(QObject* parent = nullptr);
     ~AppleGame();
@@ -47,10 +47,9 @@ private:
     // 资源
     QPixmap m_bgPixmap;
     QPixmap m_applePixmap;
-    QPixmap m_appleBadPixmap; // 【新增】烂苹果图片
+    QPixmap m_appleBadPixmap; // 烂苹果图片
     QPixmap m_basketPixmap;
 
-    // ... 音效、计时器、数据保持不变 ...
     QSoundEffect* m_catchSound;
     QSoundEffect* m_bgMusic;
     QList<Apple*> m_apples;

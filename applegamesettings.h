@@ -36,7 +36,7 @@ private slots:
 
 private:
     void setupUI();
-    void setupSliderStyle(QSlider* slider); // 复用之前的滑块样式代码
+    void setupSliderStyle(QSlider* slider); 
 
     // UI 组件
     QSlider* m_sliderLevel;
