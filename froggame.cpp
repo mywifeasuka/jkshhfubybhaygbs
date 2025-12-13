@@ -15,13 +15,12 @@ const int START_BANK_Y = 500;
 const int ROW_Y[] = { 400, 300, 200 };
 const int GOAL_BANK_Y = 100;
 
-// 默认单词 (保底用)
 const QStringList DEFAULT_WORDS = {
     "DATA", "NODE", "TREE", "LIST", "CODE", "BYTE", "BIT", "LOOP"
 };
 
 FrogGame::FrogGame(QObject* parent) : GameBase(parent) {
-    // 资源加载不变...
+    // 资源加载
     m_bgPixmap.load(":/img/frog_background.png");
     m_frogPixmap.load(":/img/frog_back_1.png");
     m_leafPixmap.load(":/img/frog_leaf.png");
@@ -42,7 +41,7 @@ FrogGame::FrogGame(QObject* parent) : GameBase(parent) {
 
     // 初始设置
     m_settings.difficulty = 1;
-    m_settings.dictionaryFile = "4W.DAT";
+    m_settings.dictionaryFile = "4W.ID";
     m_wordList = DEFAULT_WORDS;
 }
 
@@ -51,56 +50,43 @@ FrogGame::~FrogGame() {
     m_leaves.clear();
 }
 
-// 【新增】接收设置并加载词库
 void FrogGame::updateSettings(const FrogSettingsData& settings) {
     m_settings = settings;
-
-    // 加载对应的词库文件
     loadDictionary(m_settings.dictionaryFile);
 }
 
-// 【新增】读取 DAT 文件
 void FrogGame::loadDictionary(const QString& filename) {
-    // 构造路径: exe目录/Data/English/T_WORD/Dictionary/文件名
     QString path = QCoreApplication::applicationDirPath() + "/Data/English/T_WORD/Dictionary/" + filename;
 
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
-        qDebug() << "Cannot open dictionary:" << path;
-        if (m_wordList.isEmpty()) m_wordList = DEFAULT_WORDS; // 失败保底
+        if (m_wordList.isEmpty()) m_wordList = DEFAULT_WORDS;
         return;
     }
 
     QByteArray data = file.readAll();
     file.close();
 
-    // 解析逻辑：
-    // 这些旧的DAT文件可能是纯文本，也可能是简单的二进制。
-    // 为了最大兼容性，我们只提取其中的连续字母序列作为单词。
-    // 忽略所有乱码、数字和符号。
-
     QStringList newWords;
     QString currentWord;
 
     for (char c : data) {
-        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '\'' || c == '-') {
             currentWord.append(c);
         }
         else {
-            if (currentWord.length() >= 2) { // 过滤掉单个字母
+            if (currentWord.length() >= 2) {
                 newWords.append(currentWord.toUpper());
             }
             currentWord.clear();
         }
     }
-    // 处理文件末尾
     if (currentWord.length() >= 2) {
         newWords.append(currentWord.toUpper());
     }
 
     if (!newWords.isEmpty()) {
         m_wordList = newWords;
-        qDebug() << "Loaded" << m_wordList.size() << "words from" << filename;
     }
     else {
         if (m_wordList.isEmpty()) m_wordList = DEFAULT_WORDS;
@@ -112,46 +98,57 @@ void FrogGame::initGame() {
     m_score = 0;
     m_frogCount = 5;
 
-    // 确保词库已加载 (如果从未加载过)
     if (m_wordList.size() <= DEFAULT_WORDS.size()) {
         loadDictionary(m_settings.dictionaryFile);
     }
 
+    // 【修改点 1】初始化时只清空，不生成。实现“打开游戏时没有荷叶”
     qDeleteAll(m_leaves);
     m_leaves.clear();
-
-    // 初始化生成荷叶
-    // ... 这里需要用到速度逻辑 ...
-    // 为了代码复用，我们将速度计算提取，这里手动生成一批
-
-    double baseSpeed = 0.5 + (m_settings.difficulty - 1) * 0.4; // 等级1=0.5, 等级9=3.7
-    double speeds[] = { baseSpeed, -baseSpeed * 1.3, baseSpeed * 1.6 }; // 三排速度差异
-
-    for (int r = 0; r < 3; r++) {
-        int positions[] = { 160, 400, 640 };
-        for (int x : positions) {
-            QString w = m_wordList[QRandomGenerator::global()->bounded(m_wordList.size())];
-            m_leaves.append(new LotusLeaf(r, x, speeds[r], w));
-        }
-    }
 
     resetFrog();
     emit scoreChanged(0);
 }
 
-// ... spawnLeaves 的修改 ...
+void FrogGame::startGame() {
+    if (m_state == GameState::Ready || m_state == GameState::GameOver) {
+        // 先调用 initGame 重置分数和青蛙状态
+        initGame();
+
+        m_state = GameState::Playing;
+        m_physicsTimer->start();
+        m_bgMusic->play();
+
+        // 【修改点 2】点击开始后，手动生成初始的一批荷叶
+        double baseSpeed = 0.5 + (m_settings.difficulty - 1) * 0.4;
+        double speeds[] = { baseSpeed, -baseSpeed * 1.3, baseSpeed * 1.6 };
+
+        for (int r = 0; r < 3; r++) {
+            int positions[] = { 160, 400, 640 };
+            for (int x : positions) {
+                QString w = m_wordList[QRandomGenerator::global()->bounded(m_wordList.size())];
+                m_leaves.append(new LotusLeaf(r, x, speeds[r], w));
+            }
+        }
+    }
+}
+
+void FrogGame::stopGame() {
+    m_state = GameState::GameOver;
+    m_physicsTimer->stop();
+    m_bgMusic->stop();
+
+    // 【修改点 3】结束时清屏
+    qDeleteAll(m_leaves);
+    m_leaves.clear();
+}
 
 void FrogGame::spawnLeaves() {
-    // 【修改点】根据难度计算基础速度
-    // Level 1: 0.5 (非常慢)
-    // Level 9: 3.7 (很快)
     double baseSpeed = 0.5 + (m_settings.difficulty - 1) * 0.4;
-
     double speeds[] = { baseSpeed, -baseSpeed * 1.3, baseSpeed * 1.6 };
     double minGap = 260.0;
 
     for (int r = 0; r < 3; ++r) {
-        // ... 原有的间距检查逻辑保持不变 ...
         double rightMost = -9999;
         double leftMost = 9999;
         bool hasLeaf = false;
@@ -181,7 +178,6 @@ void FrogGame::spawnLeaves() {
         }
 
         if (needSpawn) {
-            // 降低生成频率一点，避免太拥挤
             if (QRandomGenerator::global()->bounded(100) < 15) {
                 QString w = m_wordList[QRandomGenerator::global()->bounded(m_wordList.size())];
                 m_leaves.append(new LotusLeaf(r, spawnX, speeds[r], w));
@@ -190,24 +186,12 @@ void FrogGame::spawnLeaves() {
     }
 }
 
-// ... resetFrog, startGame, pauseGame, stopGame, onGameTick (除 spawnLeaves 调用), handleKeyPress, checkInput, draw 均保持不变 ...
-// (为节省篇幅，这里假设以上函数体未变，请在您的代码中保留它们)
-
 void FrogGame::resetFrog() {
     m_currentRow = -1;
     m_currentLeaf = nullptr;
     m_inputBuffer.clear();
     m_frogPos = QPointF(SCREEN_WIDTH / 2, START_BANK_Y);
     m_goalWord = m_wordList[QRandomGenerator::global()->bounded(m_wordList.size())];
-}
-
-void FrogGame::startGame() {
-    if (m_state == GameState::Ready || m_state == GameState::GameOver) {
-        initGame();
-        m_state = GameState::Playing;
-        m_physicsTimer->start();
-        m_bgMusic->play();
-    }
 }
 
 void FrogGame::pauseGame() {
@@ -223,15 +207,8 @@ void FrogGame::pauseGame() {
     }
 }
 
-void FrogGame::stopGame() {
-    m_state = GameState::GameOver;
-    m_physicsTimer->stop();
-    m_bgMusic->stop();
-}
-
 void FrogGame::onGameTick() {
-    spawnLeaves(); // 内部已使用新的速度
-    // ... 移动和判定逻辑不变 ...
+    spawnLeaves();
     for (auto it = m_leaves.begin(); it != m_leaves.end(); ) {
         LotusLeaf* leaf = *it;
         leaf->x += leaf->speed;
@@ -261,8 +238,6 @@ void FrogGame::onGameTick() {
     }
 }
 
-// ... handleKeyPress, checkInput, draw 保持不变 ...
-// (请确保您的文件中包含它们)
 void FrogGame::handleKeyPress(QKeyEvent* event) {
     if (m_state != GameState::Playing) return;
     if (event->key() == Qt::Key_Backspace) {
@@ -325,57 +300,77 @@ void FrogGame::checkInput() {
 
 void FrogGame::draw(QPainter& painter) {
     painter.setRenderHint(QPainter::Antialiasing);
+
+    // 背景
     if (!m_bgPixmap.isNull()) {
         painter.drawPixmap(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, m_bgPixmap);
     }
     else {
         painter.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, QColor(65, 105, 225));
     }
+
+    // 终点单词
     painter.setPen(Qt::white);
     painter.setFont(QFont("Arial", 20, QFont::Bold));
     painter.drawText(QRect(0, GOAL_BANK_Y - 20, SCREEN_WIDTH, 40), Qt::AlignCenter, m_goalWord);
+
     if (m_currentRow == 2) {
         int w = painter.fontMetrics().horizontalAdvance(m_goalWord);
         int startX = (SCREEN_WIDTH - w) / 2;
         painter.setPen(Qt::yellow);
         painter.drawText(startX, GOAL_BANK_Y + 10, m_inputBuffer);
     }
+
+    // 绘制荷叶
     for (LotusLeaf* leaf : m_leaves) {
         if (!m_leafPixmap.isNull()) {
             painter.drawPixmap(leaf->x - m_leafPixmap.width() / 2,
                 ROW_Y[leaf->row] - m_leafPixmap.height() / 2,
                 m_leafPixmap);
         }
+
         painter.setFont(QFont("Arial", 14, QFont::Bold));
         bool isTarget = (leaf->row == m_currentRow + 1) && leaf->word.startsWith(m_inputBuffer);
         int textY = ROW_Y[leaf->row] + 6;
+
+        // 【修改点 4】文字颜色：普通状态黑色，选中输入时红色+黑色
         if (isTarget && !m_inputBuffer.isEmpty()) {
             QFontMetrics fm(painter.font());
             int totalW = fm.horizontalAdvance(leaf->word);
             int startX = leaf->x - totalW / 2;
-            painter.setPen(Qt::yellow);
+
+            // 已输入部分：红色 (高亮显示进度)
+            painter.setPen(Qt::red);
             painter.drawText(startX, textY, m_inputBuffer);
+
+            // 未输入部分：黑色 (保持默认清晰度)
             int typedW = fm.horizontalAdvance(m_inputBuffer);
-            painter.setPen(Qt::white);
+            painter.setPen(Qt::black);
             painter.drawText(startX + typedW, textY, leaf->word.mid(m_inputBuffer.length()));
         }
         else {
-            painter.setPen(Qt::white);
+            // 普通状态：黑色
+            painter.setPen(Qt::black);
             QRect textRect(leaf->x - 60, ROW_Y[leaf->row] - 20, 120, 40);
             painter.drawText(textRect, Qt::AlignCenter, leaf->word);
         }
     }
+
+    // 青蛙绘制
     if (!m_frogPixmap.isNull()) {
         painter.drawPixmap(m_frogPos.x() - m_frogPixmap.width() / 2,
             m_frogPos.y() - m_frogPixmap.height() / 2,
             m_frogPixmap);
     }
+
+    // 剩余生命
     for (int i = 0; i < m_frogCount; ++i) {
         int fx = SCREEN_WIDTH - 40 - (i * 35);
         int fy = SCREEN_HEIGHT - 40;
         if (!m_frogPixmap.isNull())
             painter.drawPixmap(fx, fy, 25, 25, m_frogPixmap);
     }
+
     painter.setPen(Qt::white);
     painter.setFont(QFont("Microsoft YaHei", 14, QFont::Bold));
     painter.drawText(20, 40, QString("Score: %1").arg(m_score));

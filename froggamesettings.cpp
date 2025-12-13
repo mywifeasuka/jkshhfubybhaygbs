@@ -4,8 +4,14 @@
 #include <QFormLayout>
 #include <QPainter>
 #include <QDebug>
+#include <QAbstractItemView> // 【新增】用于设置下拉视图样式
 
-FrogGameSettings::FrogGameSettings(QWidget *parent) : QDialog(parent), m_isDragging(false) {
+// 【修改点 1】解决中文乱码 (必须放在所有 include 之后，代码之前)
+#if defined(_MSC_VER) && (_MSC_VER >= 1600)
+#pragma execution_character_set("utf-8")
+#endif
+
+FrogGameSettings::FrogGameSettings(QWidget* parent) : QDialog(parent), m_isDragging(false) {
     setWindowFlags(Qt::FramelessWindowHint | Qt::Dialog);
     setAttribute(Qt::WA_TranslucentBackground);
 
@@ -13,19 +19,20 @@ FrogGameSettings::FrogGameSettings(QWidget *parent) : QDialog(parent), m_isDragg
     m_bgPixmap.load(":/img/frog_setup.png");
     if (!m_bgPixmap.isNull()) {
         setFixedSize(m_bgPixmap.size());
-    } else {
+    }
+    else {
         setFixedSize(400, 300);
     }
 
-    // 初始化课程映射 (显示名 -> 文件名)
-    m_courseMap << qMakePair(QString("新版小学英语"), QString("Grade.DAT"));
-    m_courseMap << qMakePair(QString("新版中学英语"), QString("Middle.DAT"));
-    m_courseMap << qMakePair(QString("新版高中英语"), QString("High.DAT"));
-    m_courseMap << qMakePair(QString("大学英语1~4级常用词汇"), QString("4W.DAT"));
-    m_courseMap << qMakePair(QString("大学英语5~6级常用词汇"), QString("6W.DAT"));
-    m_courseMap << qMakePair(QString("新编GMAT词汇"), QString("GMAT.DAT"));
-    m_courseMap << qMakePair(QString("GRE词汇进阶"), QString("GRE.DAT"));
-    m_courseMap << qMakePair(QString("托福单词"), QString("TOEFL.DAT"));
+    // 【修改点 2】将文件后缀由 .DAT 改为 .ID (因为ID文件里才是纯单词)
+    m_courseMap << qMakePair(QString("新版小学英语"), QString("Grade.ID"));
+    m_courseMap << qMakePair(QString("新版中学英语"), QString("Middle.ID"));
+    m_courseMap << qMakePair(QString("新版高中英语"), QString("High.ID"));
+    m_courseMap << qMakePair(QString("大学英语1~4级常用词汇"), QString("4W.ID"));
+    m_courseMap << qMakePair(QString("大学英语5~6级常用词汇"), QString("6W.ID"));
+    m_courseMap << qMakePair(QString("新编GMAT词汇"), QString("GMAT.ID"));
+    m_courseMap << qMakePair(QString("GRE词汇进阶"), QString("GRE.ID"));
+    m_courseMap << qMakePair(QString("托福单词"), QString("TOEFL.ID"));
 
     setupUI();
 
@@ -36,12 +43,11 @@ FrogGameSettings::FrogGameSettings(QWidget *parent) : QDialog(parent), m_isDragg
 }
 
 void FrogGameSettings::setupUI() {
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    // 调整边距以适应背景图 (左侧留白多一些，避开左边的蓝色装饰)
-    mainLayout->setContentsMargins(180, 80, 50, 40); 
+    QVBoxLayout* mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(180, 80, 50, 40);
     mainLayout->setSpacing(20);
 
-    QFormLayout *formLayout = new QFormLayout();
+    QFormLayout* formLayout = new QFormLayout();
     formLayout->setLabelAlignment(Qt::AlignRight);
     formLayout->setHorizontalSpacing(15);
     formLayout->setVerticalSpacing(25);
@@ -50,17 +56,39 @@ void FrogGameSettings::setupUI() {
     m_comboCourse = new QComboBox();
     m_comboCourse->setFixedSize(180, 25);
     for (const auto& pair : m_courseMap) {
-        m_comboCourse->addItem(pair.first, pair.second); // Data存文件名
+        m_comboCourse->addItem(pair.first, pair.second);
     }
-    // 简单的QSS美化
+
+    // 【修改点 3】强制设置字体颜色为黑色，包括下拉列表项
+    // QComboBox: 主控件样式
+    // QComboBox QAbstractItemView: 下拉列表样式
     m_comboCourse->setStyleSheet(
-        "QComboBox { border: 1px solid gray; border-radius: 3px; padding: 1px 18px 1px 3px; background: white; }"
-        "QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: top right; width: 15px; border-left-width: 1px; border-left-color: darkgray; border-left-style: solid; }"
-        "QComboBox::down-arrow { image: url(:/img/dropdown_button.bmp); }" // 如果没有下拉箭头图，可不写这行
+        "QComboBox {"
+        "    border: 1px solid gray;"
+        "    border-radius: 3px;"
+        "    padding: 1px 18px 1px 3px;"
+        "    background: white;"
+        "    color: black;"           // 默认文字黑色
+        "    selection-color: black;" // 选中文字黑色
+        "}"
+        "QComboBox::drop-down {"
+        "    subcontrol-origin: padding;"
+        "    subcontrol-position: top right;"
+        "    width: 15px;"
+        "    border-left-width: 1px;"
+        "    border-left-color: darkgray;"
+        "    border-left-style: solid;"
+        "}"
+        "QComboBox QAbstractItemView {"
+        "    color: black;"             // 下拉项文字黑色
+        "    background-color: white;"  // 下拉项背景白色
+        "    selection-color: black;"   // 鼠标悬停选中项文字黑色
+        "    selection-background-color: #E0E0E0;" // 鼠标悬停选中项背景浅灰
+        "}"
     );
 
     QLabel* l1 = new QLabel("选择课程:");
-    l1->setStyleSheet("font-family: 'SimSun'; font-size: 14px; color: black;");
+    l1->setStyleSheet("font-family: 'SimSun'; font-size: 14px; color: black;"); // 确保Label也是黑色
     formLayout->addRow(l1, m_comboCourse);
 
     // 2. 难度等级 (Slider 1-9)
@@ -70,7 +98,9 @@ void FrogGameSettings::setupUI() {
 
     m_labelDiff = new QLabel("1");
     m_labelDiff->setFixedWidth(30);
-    
+    // 确保数字也是黑色
+    m_labelDiff->setStyleSheet("color: black; font-weight: bold;");
+
     QHBoxLayout* row2 = new QHBoxLayout();
     row2->addWidget(m_sliderDiff);
     row2->addWidget(m_labelDiff);
@@ -83,7 +113,7 @@ void FrogGameSettings::setupUI() {
     mainLayout->addStretch();
 
     // 按钮区域
-    QHBoxLayout *btnLayout = new QHBoxLayout();
+    QHBoxLayout* btnLayout = new QHBoxLayout();
     btnLayout->setSpacing(10);
     btnLayout->addStretch();
 
@@ -97,6 +127,9 @@ void FrogGameSettings::setupUI() {
     mainLayout->addLayout(btnLayout);
 }
 
+// ... setupSliderStyle, paintEvent 等其他函数保持不变 ...
+// 注意：onDefaultClicked 中也要把默认文件改为 .ID
+
 void FrogGameSettings::setupSliderStyle(QSlider* slider) {
     slider->setStyleSheet(
         "QSlider::groove:horizontal { border: 0px; height: 8px; background: transparent; border-image: url(:/img/slider_bg.bmp) 0 0 0 0 stretch stretch; }"
@@ -106,29 +139,28 @@ void FrogGameSettings::setupSliderStyle(QSlider* slider) {
     );
 }
 
-void FrogGameSettings::paintEvent(QPaintEvent *) {
+void FrogGameSettings::paintEvent(QPaintEvent*) {
     QPainter painter(this);
     if (!m_bgPixmap.isNull()) painter.drawPixmap(0, 0, width(), height(), m_bgPixmap);
     else painter.fillRect(rect(), Qt::white);
 }
 
-void FrogGameSettings::mousePressEvent(QMouseEvent *event) {
+void FrogGameSettings::mousePressEvent(QMouseEvent* event) {
     if (event->button() == Qt::LeftButton) {
         m_isDragging = true;
         m_dragPosition = event->globalPos() - frameGeometry().topLeft();
     }
 }
-void FrogGameSettings::mouseMoveEvent(QMouseEvent *event) {
+void FrogGameSettings::mouseMoveEvent(QMouseEvent* event) {
     if (event->buttons() & Qt::LeftButton && m_isDragging) {
         move(event->globalPos() - m_dragPosition);
     }
 }
 
-void FrogGameSettings::setSettings(const FrogSettingsData &s) {
+void FrogGameSettings::setSettings(const FrogSettingsData& s) {
     m_sliderDiff->setValue(s.difficulty);
     m_labelDiff->setText(QString::number(s.difficulty));
-    
-    // 根据文件名找到对应的 ComboBox 索引
+
     int idx = m_comboCourse->findData(s.dictionaryFile);
     if (idx != -1) m_comboCourse->setCurrentIndex(idx);
 }
@@ -148,6 +180,6 @@ void FrogGameSettings::onDifficultyChanged(int value) {
 void FrogGameSettings::onDefaultClicked() {
     FrogSettingsData d;
     d.difficulty = 1;
-    d.dictionaryFile = "4W.DAT"; // 默认4级
+    d.dictionaryFile = "4W.ID"; // 【修改】默认也改为 .ID
     setSettings(d);
 }
