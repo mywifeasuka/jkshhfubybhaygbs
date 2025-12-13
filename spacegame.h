@@ -57,6 +57,8 @@ private slots:
     void onBtnHiscoreClicked();
     void onBtnExitClicked();
 
+    void onBtnGamePauseClicked();
+
 private:
     void spawnEnemy();
     void spawnBullet(const QPointF& targetPos);
@@ -66,6 +68,9 @@ private:
     void setupInternalUI();
     void showMenuUI(bool isPauseMode); // isPauseMode=true显示返回键，false显示开始键
     void hideMenuUI();
+
+    void showGameUI();
+    void hideGameUI();
 
     // --- 资源 ---
     QPixmap m_bgPixmap;
@@ -82,6 +87,8 @@ private:
     ImageButton* m_btnOption;
     ImageButton* m_btnHiscore;
     ImageButton* m_btnExit;
+
+    ImageButton* m_btnGamePause;
 
     SpaceGameSettings* m_settingsDialog;
     SpaceSettingsData m_settings;
