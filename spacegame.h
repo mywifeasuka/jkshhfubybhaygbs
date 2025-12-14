@@ -65,12 +65,12 @@ private:
     void spawnBullet(const QPointF& startPos, const QString& targetLetter);
     void createExplosion(const QPointF& pos);
 
-    // 碰撞检测（修复了迭代器失效导致的闪退）
+    // 碰撞检测
     bool checkCollisions();
 
     void drawHUD(QPainter& painter);
 
-    // 纯绘制的输入界面
+    // 输入界面
     void drawNameInput(QPainter& painter);
 
     void handleGameOver();
