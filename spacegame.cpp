@@ -22,6 +22,12 @@ SpaceGame::SpaceGame(QObject* parent) : GameBase(parent) {
     m_bulletPixmap.load(":/img/space_bomb.png");
     m_explosionPixmap.load(":/img/space_explosion_0.png");
 
+    // 加载输入框背景
+    m_inputBgPixmap.load(":/img/space_caption_back.png");
+    if (m_inputBgPixmap.isNull()) {
+        m_inputBgPixmap.load(":/img/space_mainmenu_bg.png");
+    }
+
     m_hudLabelScore.load(":/img/space_label_score.png");
     m_hudLabelLife.load(":/img/space_label_life.png");
     m_hudLabelTime.load(":/img/space_label_time.png");
@@ -43,12 +49,14 @@ SpaceGame::SpaceGame(QObject* parent) : GameBase(parent) {
     m_settingsDialog = new SpaceGameSettings(widgetParent);
 
     setupInternalUI();
+
+    m_isInputActive = false;
+    m_inputName = "";
 }
 
 SpaceGame::~SpaceGame() {
     qDeleteAll(m_entities);
     m_entities.clear();
-
 }
 
 void SpaceGame::setupInternalUI() {
@@ -74,12 +82,11 @@ void SpaceGame::setupInternalUI() {
     m_btnExit = createBtn("exit");
     connect(m_btnExit, &ImageButton::clicked, this, &SpaceGame::onBtnExitClicked);
 
-    // 布局计算
     m_btnStart->setFixedSizeToPixmap();
     int btnW = m_btnStart->width();
     int btnH = m_btnStart->height();
-    int count = 4; int spacing = 10;
-    int totalHeight = count * btnH + (count - 1) * spacing;
+    int spacing = 10;
+    int totalHeight = 4 * btnH + 3 * spacing;
     int startY = (SCREEN_HEIGHT - totalHeight) / 2 + (int)(1.5 * btnH);
     int centerX = (SCREEN_WIDTH - btnW) / 2;
 
@@ -129,11 +136,13 @@ void SpaceGame::hideMenuUI() {
 void SpaceGame::initGame() {
     m_state = GameState::Ready;
     m_score = 0;
+    m_isInputActive = false;
+
     qDeleteAll(m_entities);
     m_entities.clear();
 
     m_playerPos = QPointF(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 80);
-    m_lives = m_settings.lives; 
+    m_lives = m_settings.lives;
 
     m_difficultyLevel = m_settings.difficulty;
     m_spawnInterval = 80 - (m_difficultyLevel - 1) * 5;
@@ -146,6 +155,10 @@ void SpaceGame::initGame() {
     emit scoreChanged(0);
     showMenuUI(false);
     hideGameUI();
+
+    // 确保主窗口重绘
+    QWidget* parent = qobject_cast<QWidget*>(this->parent());
+    if (parent) parent->update();
 }
 
 void SpaceGame::startGame() {
@@ -154,6 +167,10 @@ void SpaceGame::startGame() {
     showGameUI();
     m_physicsTimer->start();
     m_bgMusic->play();
+
+    // 确保获得焦点以便接收键盘事件
+    QWidget* parent = qobject_cast<QWidget*>(this->parent());
+    if (parent) parent->setFocus();
 }
 
 void SpaceGame::resumeGame() {
@@ -170,7 +187,11 @@ void SpaceGame::pauseGame() {
 }
 void SpaceGame::stopGame() {
     m_state = GameState::GameOver;
-    m_physicsTimer->stop(); m_bgMusic->stop(); hideMenuUI(); hideGameUI();
+    m_physicsTimer->stop();
+    m_bgMusic->stop();
+    hideMenuUI();
+    hideGameUI();
+    m_isInputActive = false;
 }
 
 void SpaceGame::onGameTick() {
@@ -234,7 +255,7 @@ void SpaceGame::onGameTick() {
 
     if (checkCollisions()) {
         handleGameOver();
-        return; 
+        return;
     }
 
     for (auto it = m_entities.begin(); it != m_entities.end(); ) {
@@ -248,15 +269,24 @@ void SpaceGame::onGameTick() {
     }
 }
 
+// 【闪退修复】
+// 使用索引循环代替范围循环，防止在循环中 append 导致迭代器失效
 bool SpaceGame::checkCollisions() {
-    for (SpaceEntity* bullet : m_entities) {
+    // 获取当前大小，只遍历当前帧已有的实体，防止死循环
+    int count = m_entities.size();
+
+    // 1. 子弹击中敌人
+    for (int i = 0; i < count; ++i) {
+        SpaceEntity* bullet = m_entities[i];
         if (bullet->type == Type_Bullet && bullet->active) {
-            for (SpaceEntity* enemy : m_entities) {
+            for (int j = 0; j < count; ++j) {
+                SpaceEntity* enemy = m_entities[j];
                 if (enemy->type == Type_Enemy && enemy->active) {
                     QLineF line(bullet->pos, enemy->pos);
                     if (line.length() < 40) {
                         bullet->active = false;
                         enemy->active = false;
+                        // createExplosion 会 append 到 list，但我们用 count 限制了边界，所以安全
                         createExplosion(enemy->pos);
                         m_explodeSound->play();
                         m_score += 100;
@@ -268,18 +298,20 @@ bool SpaceGame::checkCollisions() {
         }
     }
 
+    // 2. 敌人撞击玩家
     double playerRadius = 30.0;
-    for (SpaceEntity* enemy : m_entities) {
+    for (int i = 0; i < count; ++i) {
+        SpaceEntity* enemy = m_entities[i];
         if (enemy->type == Type_Enemy && enemy->active) {
             QLineF line(m_playerPos, enemy->pos);
             if (line.length() < (playerRadius + 25)) {
                 enemy->active = false;
-                createExplosion(enemy->pos);
-                m_lives--; // 扣血
+                createExplosion(enemy->pos); // append 安全
+                m_lives--;
                 m_explodeSound->play();
 
                 if (m_lives <= 0) {
-                    return true; 
+                    return true;
                 }
             }
         }
@@ -288,17 +320,16 @@ bool SpaceGame::checkCollisions() {
 }
 
 void SpaceGame::handleGameOver() {
-    stopGame(); // 停止定时器
+    m_physicsTimer->stop();
+    m_bgMusic->stop();
+    hideGameUI();
 
-    // 弹出输入名字对话框
-    SpaceNameDialog dlg(m_score, qobject_cast<QWidget*>(parent()));
-    if (dlg.exec() == QDialog::Accepted) {
-        QString name = dlg.getName();
-        if (name.isEmpty()) name = "无名英雄";
-        saveScore(name, m_score);
-    }
-    // 回到主菜单
-    initGame();
+    m_isInputActive = true;
+    m_inputName = "Hero";
+
+    // 强制重绘，显示输入界面
+    QWidget* parent = qobject_cast<QWidget*>(this->parent());
+    if (parent) parent->update();
 }
 
 void SpaceGame::saveScore(const QString& name, int score) {
@@ -307,6 +338,52 @@ void SpaceGame::saveScore(const QString& name, int score) {
         QTextStream out(&file);
         out << name << "," << score << "," << QDate::currentDate().toString("yyyy-MM-dd") << "\n";
         file.close();
+    }
+}
+
+void SpaceGame::handleKeyPress(QKeyEvent* event) {
+    if (m_isInputActive) {
+        if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+            saveScore(m_inputName, m_score);
+            initGame();
+        }
+        else if (event->key() == Qt::Key_Backspace) {
+            if (!m_inputName.isEmpty()) m_inputName.chop(1);
+        }
+        else {
+            QString text = event->text();
+            if (!text.isEmpty() && m_inputName.length() < 10) {
+                if (text.at(0).isPrint()) {
+                    m_inputName += text;
+                }
+            }
+        }
+
+        QWidget* parent = qobject_cast<QWidget*>(this->parent());
+        if (parent) parent->update();
+        return;
+    }
+
+    if (m_state == GameState::Playing) {
+        if (event->key() == Qt::Key_Escape) { pauseGame(); return; }
+        QString text = event->text().toUpper();
+        if (text.isEmpty()) return;
+
+        SpaceEntity* target = nullptr;
+        double maxY = -1000;
+        // 查找目标循环（这里不涉及append，用范围循环通常安全，但为了保险也可用索引）
+        for (SpaceEntity* e : m_entities) {
+            if (e->type == Type_Enemy && e->active && e->letter == text) {
+                if (e->pos.y() > maxY) { maxY = e->pos.y(); target = e; }
+            }
+        }
+        QString tLetter = target ? target->letter : "";
+        spawnBullet(m_playerPos, tLetter); // append 在循环外，安全
+        m_shootSound->play();
+
+    }
+    else if (m_state == GameState::Paused) {
+        if (event->key() == Qt::Key_Escape) resumeGame();
     }
 }
 
@@ -334,13 +411,60 @@ void SpaceGame::draw(QPainter& painter) {
                 painter.drawPixmap(dp.x() - m_explosionPixmap.width() / 2, dp.y() - m_explosionPixmap.height() / 2, m_explosionPixmap);
             }
         }
-
         drawHUD(painter);
+
+        if (m_isInputActive) {
+            drawNameInput(painter);
+        }
     }
     else {
         if (!m_menuBgPixmap.isNull()) painter.drawPixmap(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, m_menuBgPixmap);
         else painter.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, Qt::black);
     }
+}
+
+// 【乱码修复】使用 QString::fromWCharArray(L"...")
+void SpaceGame::drawNameInput(QPainter& painter) {
+    painter.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, QColor(0, 0, 0, 150));
+
+    int boxW = 400; int boxH = 300;
+    int boxX = (SCREEN_WIDTH - boxW) / 2;
+    int boxY = (SCREEN_HEIGHT - boxH) / 2;
+
+    if (!m_inputBgPixmap.isNull()) {
+        painter.drawPixmap(boxX, boxY, boxW, boxH, m_inputBgPixmap);
+    }
+    else {
+        painter.fillRect(boxX, boxY, boxW, boxH, Qt::darkBlue);
+        painter.setPen(Qt::white);
+        painter.drawRect(boxX, boxY, boxW, boxH);
+    }
+
+    painter.setPen(Qt::yellow);
+    painter.setFont(QFont("Microsoft YaHei", 20, QFont::Bold));
+    // 修复乱码：
+    painter.drawText(QRect(boxX, boxY + 40, boxW, 40), Qt::AlignCenter, QString::fromWCharArray(L"请留下您的大名"));
+
+    painter.setPen(Qt::white);
+    painter.setFont(QFont("Microsoft YaHei", 16));
+    // 修复乱码：
+    painter.drawText(QRect(boxX, boxY + 90, boxW, 30), Qt::AlignCenter, QString::fromWCharArray(L"最终得分: %1").arg(m_score));
+
+    int editW = 240; int editH = 40;
+    int editX = (SCREEN_WIDTH - editW) / 2;
+    int editY = boxY + 140;
+
+    painter.setBrush(QColor(0, 0, 0, 100));
+    painter.setPen(QPen(QColor(74, 144, 226), 2));
+    painter.drawRect(editX, editY, editW, editH);
+
+    painter.setPen(Qt::white);
+    painter.drawText(QRect(editX, editY, editW, editH), Qt::AlignCenter, m_inputName + "|");
+
+    painter.setPen(Qt::lightGray);
+    painter.setFont(QFont("Microsoft YaHei", 12));
+    // 修复乱码：
+    painter.drawText(QRect(boxX, boxY + 220, boxW, 30), Qt::AlignCenter, QString::fromWCharArray(L"按 Enter 键确认提交"));
 }
 
 void SpaceGame::drawHUD(QPainter& painter) {
@@ -403,28 +527,7 @@ void SpaceGame::onBtnExitClicked() {
     stopGame();
     emit requestReturnToMenu();
 }
-void SpaceGame::onBtnGamePauseClicked() { pauseGame(); }
-
-void SpaceGame::handleKeyPress(QKeyEvent* event) {
-    if (m_state == GameState::Playing) {
-        if (event->key() == Qt::Key_Escape) { pauseGame(); return; }
-        QString text = event->text().toUpper();
-        if (text.isEmpty()) return;
-
-        SpaceEntity* target = nullptr;
-        double maxY = -1000;
-        for (SpaceEntity* e : m_entities) {
-            if (e->type == Type_Enemy && e->active && e->letter == text) {
-                if (e->pos.y() > maxY) { maxY = e->pos.y(); target = e; }
-            }
-        }
-
-        QString tLetter = target ? target->letter : "";
-        spawnBullet(m_playerPos, tLetter);
-        m_shootSound->play();
-
-    }
-    else if (m_state == GameState::Paused) {
-        if (event->key() == Qt::Key_Escape) resumeGame();
-    }
+void SpaceGame::onBtnGamePauseClicked() {
+    if (m_isInputActive) return;
+    pauseGame();
 }

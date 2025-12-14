@@ -4,25 +4,26 @@
 #include "gamebase.h"
 #include "spacegamesettings.h"
 #include "imagebutton.h"
-#include "spacenamedialog.h" 
 #include <QPixmap>
 #include <QList>
 #include <QPointF>
 #include <QtMultimedia/QSoundEffect>
 
+// 定义实体类型
 enum EntityType {
     Type_Enemy,
     Type_Bullet,
     Type_Explosion
 };
 
+// 实体结构体
 struct SpaceEntity {
     EntityType type;
     QPointF pos;
     QPointF velocity;
     double initialX;
-    QString letter;       // 敌机显示的字母
-    QString targetLetter; // 子弹追踪的目标字母
+    QString letter;
+    QString targetLetter;
     int lifeTime;
     bool active;
 
@@ -61,14 +62,17 @@ private slots:
 
 private:
     void spawnEnemy();
-    // 生成子弹时传入目标字母
     void spawnBullet(const QPointF& startPos, const QString& targetLetter);
     void createExplosion(const QPointF& pos);
 
-    // 返回 bool，true 表示游戏结束
+    // 碰撞检测（修复了迭代器失效导致的闪退）
     bool checkCollisions();
 
     void drawHUD(QPainter& painter);
+
+    // 纯绘制的输入界面
+    void drawNameInput(QPainter& painter);
+
     void handleGameOver();
     void saveScore(const QString& name, int score);
 
@@ -78,7 +82,7 @@ private:
     void showGameUI();
     void hideGameUI();
 
-    // --- 资源 ---
+    // 资源
     QPixmap m_bgPixmap;
     QPixmap m_menuBgPixmap;
     QPixmap m_playerPixmap;
@@ -86,6 +90,8 @@ private:
     QPixmap m_meteorPixmap;
     QPixmap m_bulletPixmap;
     QPixmap m_explosionPixmap;
+
+    QPixmap m_inputBgPixmap; // 输入框背景
 
     QPixmap m_hudLabelScore;
     QPixmap m_hudLabelLife;
@@ -118,6 +124,10 @@ private:
     double m_playerDir;
 
     QTimer* m_physicsTimer;
+
+    // 输入状态控制
+    bool m_isInputActive;
+    QString m_inputName;
 };
 
 #endif // SPACEGAME_H
