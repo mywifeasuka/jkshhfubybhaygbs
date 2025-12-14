@@ -10,19 +10,11 @@
 #include "imagebutton.h"
 
 // 自定义图片复选框类
-// 支持4种状态：
-// 0: 未选中 (Normal)
-// 1: 未选中悬停 (Hover) -> _1
-// 2: 选中 (Checked) -> _2
-// 3: 选中悬停 (Checked Hover) -> _3
 class ImageCheckBox : public QWidget {
     Q_OBJECT
 public:
     explicit ImageCheckBox(QWidget* parent = nullptr);
 
-    // 加载四态图片
-    // basePath 例如 ":/img/checkbox"
-    // 会自动加载 basePath + ".bmp", basePath + "_1.bmp" 等
     void loadImages(const QString& basePath);
 
     bool isChecked() const { return m_checked; }

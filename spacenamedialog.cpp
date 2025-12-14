@@ -8,11 +8,8 @@ SpaceNameDialog::SpaceNameDialog(int score, QWidget *parent)
     setWindowFlags(Qt::FramelessWindowHint | Qt::Dialog);
     setAttribute(Qt::WA_TranslucentBackground);
 
-    // 使用通用背景或专用背景，这里复用 caption_back 如果有，或者 mainmenu_bg
-    // 假设使用 space_caption_back.png 作为小窗口背景
     m_bgPixmap.load(":/img/space_caption_back.png");
     if (m_bgPixmap.isNull()) {
-        // 容错：如果没有 caption_back，用 mainmenu_bg 缩放
         QPixmap tmp(":/img/space_mainmenu_bg.png");
         if (!tmp.isNull()) m_bgPixmap = tmp.scaled(400, 300);
     }
@@ -59,12 +56,9 @@ void SpaceNameDialog::setupUI() {
 
     layout->addStretch();
 
-    // OK 按钮 (复用 space_start 或者 ok 按钮)
-    // 这里为了方便，复用 space_start 的图，或者通用 OK
     m_btnOk = new ImageButton(":/img/ok.bmp", ":/img/ok_hover.bmp", ":/img/ok_pressed.bmp", this);
     connect(m_btnOk, &ImageButton::clicked, this, &QDialog::accept);
     
-    // 居中按钮
     QHBoxLayout* btnLayout = new QHBoxLayout();
     btnLayout->addStretch();
     btnLayout->addWidget(m_btnOk);

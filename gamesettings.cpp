@@ -6,11 +6,9 @@
 #include <QStyleOption>
 
 GameSettings::GameSettings(QWidget* parent) : QDialog(parent), m_isDragging(false) {
-    // 1. 设置无边框窗口
     setWindowFlags(Qt::FramelessWindowHint | Qt::Dialog);
     setAttribute(Qt::WA_TranslucentBackground); // 允许透明背景（如果有的话）
 
-    // 2. 加载背景图
     m_bgPixmap.load(":/img/mole_setup.bmp");
     if (!m_bgPixmap.isNull()) {
         setFixedSize(m_bgPixmap.size());
@@ -34,24 +32,20 @@ GameSettings::GameSettings(QWidget* parent) : QDialog(parent), m_isDragging(fals
 void GameSettings::setupUI() {
     // 主布局
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    // 根据背景图调整边距：上、左、右、下
-    // 原版图片的标题栏大约占 50px，左侧装饰占 100px
     mainLayout->setContentsMargins(120, 60, 40, 30);
     mainLayout->setSpacing(20); // 控件垂直间距
 
-    // --- 表单区域 ---
     QFormLayout* formLayout = new QFormLayout();
     formLayout->setLabelAlignment(Qt::AlignRight); // 标签右对齐
     formLayout->setHorizontalSpacing(15);
     formLayout->setVerticalSpacing(20);
 
-    // 1. 游戏时间
     gameTimeSlider = new QSlider(Qt::Horizontal);
     gameTimeSlider->setRange(10, 300);
-    setupSliderStyle(gameTimeSlider); // 应用自定义样式
+    setupSliderStyle(gameTimeSlider); 
 
     gameTimeLabel = new QLabel("60");
-    gameTimeLabel->setFixedWidth(50); // 固定宽度防止抖动
+    gameTimeLabel->setFixedWidth(50); 
     gameTimeLabel->setAlignment(Qt::AlignCenter);
 
     QHBoxLayout* row1 = new QHBoxLayout();
@@ -59,11 +53,10 @@ void GameSettings::setupUI() {
     row1->addWidget(gameTimeLabel);
 
     QLabel* label1 = new QLabel(QStringLiteral("游戏时间:"));
-    // 设置字体样式，模仿原版
+
     label1->setStyleSheet("font-family: 'Microsoft YaHei'; font-size: 14px; font-weight: bold; color: #333333;");
     formLayout->addRow(label1, row1);
 
-    // 2. 出现间隔
     spawnIntervalSlider = new QSlider(Qt::Horizontal);
     spawnIntervalSlider->setRange(300, 2000);
     setupSliderStyle(spawnIntervalSlider);
@@ -80,7 +73,6 @@ void GameSettings::setupUI() {
     label2->setStyleSheet("font-family: 'Microsoft YaHei'; font-size: 14px; font-weight: bold; color: #333333;");
     formLayout->addRow(label2, row2);
 
-    // 3. 停留时间
     stayTimeSlider = new QSlider(Qt::Horizontal);
     stayTimeSlider->setRange(500, 5000);
     setupSliderStyle(stayTimeSlider);
@@ -98,17 +90,12 @@ void GameSettings::setupUI() {
     formLayout->addRow(label3, row3);
 
     mainLayout->addLayout(formLayout);
-    mainLayout->addStretch(); // 弹簧，把按钮顶到底部
+    mainLayout->addStretch(); 
 
-    // --- 按钮区域 ---
     QHBoxLayout* buttonLayout = new QHBoxLayout();
     buttonLayout->setSpacing(10);
-    buttonLayout->addStretch(); // 左侧弹簧
+    buttonLayout->addStretch(); 
 
-    // 使用 ImageButton 加载图片资源
-    // 注意：ImageButton 构造函数通常需要 (normal, hover, pressed, parent)
-    // 这里假设这三张图一样，或者你没有 hover/pressed 资源，就重复使用一张
-    // 如果你有 _on.bmp 等资源，请替换
     okButton = new ImageButton(":/img/ok.bmp", ":/img/ok_hover.bmp", ":/img/ok_pressed.bmp", this);
     cancelButton = new ImageButton(":/img/cancel.bmp", ":/img/cancel_hover.bmp", ":/img/cancel_pressed.bmp", this);
     defaultButton = new ImageButton(":/img/default.bmp", ":/img/default_hover.bmp", ":/img/default_pressed.bmp", this);
@@ -120,27 +107,26 @@ void GameSettings::setupUI() {
     mainLayout->addLayout(buttonLayout);
 }
 
-// 核心：设置滑块的 QSS 样式以匹配资源
 void GameSettings::setupSliderStyle(QSlider* slider) {
     slider->setStyleSheet(
         "QSlider::groove:horizontal {"
         "    border: 0px;"
-        "    height: 8px;" // 轨道高度
+        "    height: 8px;" 
         "    background: transparent;"
-        "    border-image: url(:/img/slider_bg.bmp) 0 0 0 0 stretch stretch;" // 拉伸背景图
+        "    border-image: url(:/img/slider_bg.bmp) 0 0 0 0 stretch stretch;"
         "}"
         "QSlider::handle:horizontal {"
         "    border: 0px;"
-        "    width: 15px;" // 滑块宽度，根据 slider_slider.bmp 调整
+        "    width: 15px;" 
         "    height: 20px;"
-        "    margin: -6px 0;" // 负边距让滑块比轨道大，垂直居中
-        "    image: url(:/img/slider_slider.bmp);" // 滑块图片
+        "    margin: -6px 0;" 
+        "    image: url(:/img/slider_slider.bmp);" 
         "}"
         "QSlider::handle:horizontal:pressed {"
-        "    image: url(:/img/slider_slider_down.bmp);" // 按下时的图片，请修改为你实际的资源路径
+        "    image: url(:/img/slider_slider_down.bmp);" 
         "}"
         "QSlider::sub-page:horizontal {"
-        "    background: transparent;" // 左侧已滑过区域（如果需要颜色可改）
+        "    background: transparent;" 
         "}"
     );
 }
@@ -152,7 +138,6 @@ void GameSettings::paintEvent(QPaintEvent* event) {
         painter.drawPixmap(0, 0, width(), height(), m_bgPixmap);
     }
     else {
-        // 如果图没加载出来，画个灰色背景
         painter.fillRect(rect(), QColor(220, 220, 220));
         painter.setPen(Qt::black);
         painter.drawRect(0, 0, width() - 1, height() - 1);

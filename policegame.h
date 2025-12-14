@@ -23,6 +23,9 @@ public:
 
     void updateSettings(const PoliceSettingsData& settings);
 
+    // 获取当前角色 (0:警察, 1:小偷)，供结算界面使用
+    int getRole() const { return m_settings.role; }
+
 private slots:
     void onGameTick();
 
@@ -31,7 +34,6 @@ private:
     void loadResources();
     void loadArticle(const QString& filename = "");
 
-    // 增加 direction 参数
     void getCarState(double distance, int direction, const QVector<QPixmap>& sprites,
         QPointF& outPos, QPixmap& outSprite);
 
@@ -53,7 +55,6 @@ private:
     double m_playerBaseSpeed;
     double m_enemySpeed;
 
-    // 【新增】行进方向：1 为正向，-1 为反向
     int m_direction;
 
     QVector<QPointF> m_pathPoints;

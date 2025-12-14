@@ -29,7 +29,7 @@ AppleGameSettings::AppleGameSettings(QWidget *parent) : QDialog(parent), m_isDra
 
 void AppleGameSettings::setupUI() {
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    // 根据背景图调整边距 (参考之前 MoleGameSettings 的微调)
+    // 根据背景图调整边距 
     mainLayout->setContentsMargins(120, 60, 40, 30); 
     mainLayout->setSpacing(20);
 
@@ -38,7 +38,7 @@ void AppleGameSettings::setupUI() {
     formLayout->setHorizontalSpacing(15);
     formLayout->setVerticalSpacing(20);
 
-    // 1. 游戏等级 (1-10)
+    //  游戏等级 (1-10)
     m_sliderLevel = new QSlider(Qt::Horizontal);
     m_sliderLevel->setRange(1, 10);
     setupSliderStyle(m_sliderLevel);
@@ -55,7 +55,7 @@ void AppleGameSettings::setupUI() {
     l1->setStyleSheet("font-family: 'Microsoft YaHei'; font-size: 14px; font-weight: bold; color: #333;");
     formLayout->addRow(l1, row1);
 
-    // 2. 过关苹果 (10-200)
+    // 过关苹果 (10-200)
     m_sliderTarget = new QSlider(Qt::Horizontal);
     m_sliderTarget->setRange(10, 200);
     m_sliderTarget->setSingleStep(10);
@@ -73,7 +73,7 @@ void AppleGameSettings::setupUI() {
     l2->setStyleSheet("font-family: 'Microsoft YaHei'; font-size: 14px; font-weight: bold; color: #333;");
     formLayout->addRow(l2, row2);
 
-    // 3. 失败苹果 (1-20)
+    //  失败苹果 (1-20)
     m_sliderFail = new QSlider(Qt::Horizontal);
     m_sliderFail->setRange(1, 20);
     setupSliderStyle(m_sliderFail);
@@ -109,7 +109,6 @@ void AppleGameSettings::setupUI() {
 }
 
 void AppleGameSettings::setupSliderStyle(QSlider* slider) {
-    // 复用之前的 QSS
     slider->setStyleSheet(
         "QSlider::groove:horizontal { border: 0px; height: 8px; background: transparent; border-image: url(:/img/slider_bg.bmp) 0 0 0 0 stretch stretch; }"
         "QSlider::handle:horizontal { border: 0px; width: 15px; height: 20px; margin: -6px 0; image: url(:/img/slider_slider.bmp); }"

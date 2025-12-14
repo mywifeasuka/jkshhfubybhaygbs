@@ -9,15 +9,12 @@
 const int GAME_FPS = 60;
 const double SCREEN_WIDTH = 800.0;
 const double SCREEN_HEIGHT = 600.0;
-// 初始间距调整 (0-1000的地图中，300的间距比较合适)
 const double START_GAP = 300.0;
-// 地图缩放，让跑道看起来更宽大
 const double MAP_SCALE = 1.3;
 
 PoliceGame::PoliceGame(QObject* parent) : GameBase(parent) {
-    // 1. 初始化成员变量
     m_pathPoints.clear();
-    m_totalMapLength = 1000.0; // 默认值防止除零，initMapPath会覆盖
+    m_totalMapLength = 1000.0; 
     m_currentIndex = 0;
     m_isTypingError = false;
     m_direction = 1; // 默认正向 (1: 顺时针/前进, -1: 逆时针/后退)
@@ -27,11 +24,9 @@ PoliceGame::PoliceGame(QObject* parent) : GameBase(parent) {
     m_playerDistance = 0.0;
     m_enemyDistance = 0.0;
 
-    // 2. 加载资源与地图
     loadResources();
     initMapPath();
 
-    // 3. 启动定时器
     m_physicsTimer = new QTimer(this);
     m_physicsTimer->setInterval(1000 / GAME_FPS);
     connect(m_physicsTimer, &QTimer::timeout, this, &PoliceGame::onGameTick);
@@ -77,15 +72,13 @@ void PoliceGame::loadResources() {
     }
 }
 
-// 【完善】完整的文章加载逻辑
 void PoliceGame::loadArticle(const QString& filename) {
     QString targetFile = filename;
     bool loadSuccess = false;
 
-    // 1. 如果指定了文件名，尝试加载
     if (!targetFile.isEmpty()) {
         QString fullPath = QCoreApplication::applicationDirPath() + "/Data/English/E_General/" + targetFile;
-        // 如果没有后缀，补上 .txt (防止列表传参遗漏)
+        // 如果没有后缀，补上 .txt 
         if (!fullPath.endsWith(".txt", Qt::CaseInsensitive)) {
             fullPath += ".txt";
         }
@@ -104,7 +97,6 @@ void PoliceGame::loadArticle(const QString& filename) {
         }
     }
 
-    // 2. 如果加载失败或未指定文件名，使用随机库
     if (!loadSuccess) {
         static bool isDataLoaded = false;
         if (!isDataLoaded) {
@@ -115,7 +107,6 @@ void PoliceGame::loadArticle(const QString& filename) {
         m_targetText = DataManager::instance().getRandomArticle().simplified();
     }
 
-    // 3. 最终保底（防止崩溃）
     if (m_targetText.isEmpty()) m_targetText = "Ready Go";
     if (m_targetText.length() > 300) m_targetText = m_targetText.left(300);
 
@@ -144,7 +135,6 @@ void PoliceGame::getCarState(double distance, int direction, const QVector<QPixm
 {
     if (m_totalMapLength <= 0) return;
 
-    // 循环距离处理：将任意距离映射到 [0, m_totalMapLength]
     while (distance > m_totalMapLength) distance -= m_totalMapLength;
     while (distance < 0) distance += m_totalMapLength;
 
@@ -165,7 +155,6 @@ void PoliceGame::getCarState(double distance, int direction, const QVector<QPixm
             else if (angle >= 180 && angle < 270) spriteIndex = 1; // 左下
             else spriteIndex = 3; // 右下
 
-            // 【方向翻转】如果 direction 为 -1，取对角贴图模拟掉头
             if (direction == -1) {
                 spriteIndex = 3 - spriteIndex; // 0<->3, 1<->2
             }
@@ -196,8 +185,6 @@ void PoliceGame::initGame() {
         m_enemyDistance = 0.0;
     }
 
-    // 【修改】移除 difficulty，改用 vehicle 决定玩家速度
-    // Vehicle: 0=Car (Fast/Easy), 1=Bike (Slow/Hard)
     if (m_settings.vehicle == 0) {
         m_playerBaseSpeed = 0.35; // 汽车基础速度较快
     }
@@ -205,15 +192,13 @@ void PoliceGame::initGame() {
         m_playerBaseSpeed = 0.15; // 自行车基础速度较慢
     }
 
-    // 敌人速度设定为固定值（或轻微随机），作为标准参照
-    // 这样玩家选汽车就比敌人快，选自行车比敌人慢（更有挑战性）
+
     m_enemySpeed = 0.30;
 
     m_playerSpeed = 0.0;
     m_currentIndex = 0;
     m_isTypingError = false;
 
-    // 加载文章（传入设置中的文件名）
     loadArticle(m_settings.articleName);
     emit scoreChanged(0);
 }
@@ -221,7 +206,6 @@ void PoliceGame::initGame() {
 void PoliceGame::startGame() {
     // 逻辑由按键触发，此处仅做状态保护
     if (m_state == GameState::Ready) {
-        // do nothing, wait for key
     }
 }
 
@@ -232,9 +216,7 @@ void PoliceGame::stopGame() {
     m_physicsTimer->stop();
 }
 
-// 【关键修改】核心游戏循环：移动、掉头、胜负判定
 void PoliceGame::onGameTick() {
-    // 1. 移动逻辑 (根据 m_direction 决定增减)
     m_enemyDistance += (m_enemySpeed * m_direction);
 
     double totalPlayerSpeed = 0;
@@ -248,48 +230,19 @@ void PoliceGame::onGameTick() {
     }
     m_playerDistance += (totalPlayerSpeed * m_direction);
 
-    // 2. 距离差计算（线性距离）
-    // 注意：这里的 Distance 是累加值，可能远超地图长度
+
     double rawDiff = m_enemyDistance - m_playerDistance;
 
     // 取绝对距离差
     double absDiff = qAbs(rawDiff);
 
-    // 3. 掉头逻辑
-    // 设定阈值：当距离拉大到接近一圈（例如800米）时，触发掉头
-    // 地图总长 m_totalMapLength = 1000.0
     double uTurnThreshold = m_totalMapLength - 200.0;
 
-    // 如果两人距离拉得太远（快套圈了），强制掉头
-    // 这样追击者变成迎面跑，被追者也掉头迎面跑，最终在“半路”相遇
-    // 避免了“超了一圈从后面追上”导致的逻辑混乱
 
-    // 只有在距离变大的时候才检测掉头 (防止掉头后立刻又触发掉头形成震荡)
-    // 简单判定：如果当前间距 > 阈值，且方向还没反转（或者根据实际情况判断）
-
-    // 实际上，只要距离过大，就应该把方向反转，让距离缩小
     if (absDiff > uTurnThreshold) {
-        // 如果当前是正向(1)，拉开了距离 -> 变成反向(-1)相向而行
-        // 如果当前是反向(-1)，拉开了距离（这理论上不应该发生，因为反向是相向而行）
-        // 但为了稳健，我们强制让 m_direction 指向“缩小距离”的方向
-
-        // 这里简化逻辑：只要距离过大，就反转方向
-        // 为了防止每帧反转，只有当方向是导致距离增加时才反转？
-        // 其实简单地：如果距离 > 阈值，就让 m_direction = -1 (假设正向是拉开) 
-        // 不对，要看谁快。
-
-        // 修正逻辑：单纯检测是否需要翻转
-        // 无论当前方向如何，只要距离过大，就翻转当前方向
-        // 增加一个冷却或状态锁防止鬼畜，或者直接翻转
-        // 实际上，翻转后，双方迎面跑，距离会迅速缩小，absDiff 变小，就不会再次触发翻转
         m_direction *= -1;
     }
 
-    // 4. 胜负判定：相遇
-    // 当距离非常近时（无论是在地图的哪个位置）
-    // 由于我们处理了掉头，现在只需要判断“线性位置”是否重合即可吗？
-    // 不行，因为掉头后 Distance 是往回减的。
-    // 我们需要判断的是“环形地图上的最短距离”是否小于捕获范围。
 
     double pMod = m_playerDistance;
     double tMod = m_enemyDistance;
@@ -364,7 +317,6 @@ void PoliceGame::draw(QPainter& painter) {
 
     painter.restore();
 
-    // --- UI HUD ---
     int uiH = 150;
     int inputBgY = SCREEN_HEIGHT - 100;
 

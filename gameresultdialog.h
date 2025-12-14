@@ -13,7 +13,8 @@ public:
     enum GameTheme {
         Theme_Mole,
         Theme_Apple,
-        Theme_Frog
+        Theme_Frog,
+        Theme_Police // 生死时速主题
     };
 
     enum ResultAction {
@@ -23,10 +24,13 @@ public:
         Action_End
     };
 
-    // 构造函数增加 theme 参数
     explicit GameResultDialog(GameTheme theme, QWidget* parent = nullptr);
 
     void setGameResult(int score, bool isWin);
+
+    // 【新增】设置角色 (针对生死时速)
+    void setRole(int role);
+
     ResultAction getSelectedAction() const { return m_selectedAction; }
 
 protected:
@@ -40,7 +44,8 @@ private slots:
 private:
     void setupUI();
 
-    GameTheme m_currentTheme; // 当前主题
+    GameTheme m_currentTheme;
+    int m_role; // 0: Police, 1: Thief
     QPixmap m_bgPixmap;
     ResultAction m_selectedAction;
 

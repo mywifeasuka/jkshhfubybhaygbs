@@ -16,7 +16,6 @@ GameWidget::GameWidget(QWidget* parent)
     m_renderTimer->setInterval(16); // 约 60 FPS
     connect(m_renderTimer, &QTimer::timeout, this, QOverload<>::of(&QWidget::update));
 
-    // 1. 初始化游戏实例
     m_moleGame = new MoleGame(this);
     m_policeGame = new PoliceGame(this);
     m_spaceGame = new SpaceGame(this);
@@ -24,12 +23,10 @@ GameWidget::GameWidget(QWidget* parent)
     m_frogGame = new FrogGame(this);
     m_policeSettingsDialog = new PoliceGameSettings(this);
 
-    // 2. 初始化设置窗口
     m_settingsDialog = new GameSettings(this);
     m_appleSettingsDialog = new AppleGameSettings(this);
     m_frogSettingsDialog = new FrogGameSettings(this);
 
-    // 3. 初始化UI
     setupMainMenu();
     setupGameUI(); // 先创建但不显示
     
@@ -42,7 +39,6 @@ GameWidget::GameWidget(QWidget* parent)
 }
 
 GameWidget::~GameWidget() {
-    // m_moleGame 和 m_policeGame 是 this 的子对象，会自动析构
 }
 
 void GameWidget::setupMainMenu() {
@@ -76,27 +72,22 @@ void GameWidget::setupMainMenu() {
 }
 
 void GameWidget::setupGameUI() {
-    // 1. 开始按钮 (控制面板)
     m_btnStart = new ImageButton(":/img/public_start.bmp", ":/img/public_start_on.bmp", ":/img/public_start_clicked.bmp", this);
     m_btnStart->move(490, 530);
     connect(m_btnStart, &ImageButton::clicked, this, &GameWidget::onStartGame);
 
-    // 2. 暂停按钮 (控制面板)
     m_btnPause = new ImageButton(":/img/public_pause.bmp", ":/img/public_pause_on.bmp", ":/img/public_pause_clicked.bmp", this);
     m_btnPause->move(400, 510);
     connect(m_btnPause, &ImageButton::clicked, this, &GameWidget::onPauseGame);
 
-    // 3. 结束按钮 (控制面板) - 功能：停止当前局，重置为Ready
     m_btnEnd = new ImageButton(":/img/public_end.bmp", ":/img/public_end_on.bmp", ":/img/public_end_clicked.bmp", this);
     m_btnEnd->move(450, 480); // 放在控制面板区域
     connect(m_btnEnd, &ImageButton::clicked, this, &GameWidget::onStopGameRound);
 
-    // 4. 设置按钮 (控制面板)
     m_btnSettings = new ImageButton(":/img/public_settings.bmp", ":/img/public_settings_on.bmp", ":/img/public_settings_clicked.bmp", this);
     m_btnSettings->move(440, 550);
     connect(m_btnSettings, &ImageButton::clicked, this, &GameWidget::onShowSettings);
 
-    // 5. 退出按钮 (左下角) - 功能：返回主菜单
     m_btnQuitGame = new ImageButton(":/img/public_exit.bmp", ":/img/public_exit_on.bmp", ":/img/public_exit_clicked.bmp", this);
     m_btnQuitGame->move(40, 550); // 左下角位置
     connect(m_btnQuitGame, &ImageButton::clicked, this, &GameWidget::onReturnToMenu);
@@ -104,10 +95,8 @@ void GameWidget::setupGameUI() {
 
 void GameWidget::onStopGameRound() {
     if (m_currentGame) {
-        // 停止游戏逻辑（计时器停止、清理地鼠/实体）
         m_currentGame->stopGame();
 
-        // 强制重绘一次，确保画面清除干净
         update();
 
         // 更新按钮状态
@@ -117,7 +106,6 @@ void GameWidget::onStopGameRound() {
 
 void GameWidget::onReturnToMenu() {
     if (m_appState == InGame) {
-        // 暂停游戏，防止背景还在跑
         bool wasRunning = false;
         if (m_renderTimer->isActive()) {
             m_renderTimer->stop();
@@ -127,11 +115,9 @@ void GameWidget::onReturnToMenu() {
         // 弹出确认对话框
         ConfirmationDialog dlg(ConfirmationDialog::Mode_ExitGame, this);
         if (dlg.exec() == QDialog::Rejected) {
-            // 用户点击了“继续” (取消退出)
             if (wasRunning) m_renderTimer->start(); // 恢复游戏
             return;
         }
-        // 用户点击了“退出”，继续执行下面的返回菜单逻辑
     }
 
     m_renderTimer->stop();
@@ -139,7 +125,6 @@ void GameWidget::onReturnToMenu() {
     m_appState = MainMenu;
     if (m_currentGame) {
         m_currentGame->stopGame();
-        // 断开旧连接，防止信号重复
         m_currentGame->disconnect(this);
         m_currentGame = nullptr;
     }
@@ -160,7 +145,7 @@ void GameWidget::onReturnToMenu() {
     m_btnSettings->hide();
     m_btnQuitGame->hide();  
 
-    update(); // 重绘（清除游戏背景）
+    update(); 
 }
 
 void GameWidget::switchToGame(GameBase* game) {
@@ -180,13 +165,11 @@ void GameWidget::switchToGame(GameBase* game) {
     m_btnFrog->hide();
     m_btnExit->hide();
 
-    // 判断是否为太空大战 (用于特殊处理)
     SpaceGame* spaceGame = dynamic_cast<SpaceGame*>(game);
 
-    // === 按钮显示逻辑分支 ===
+
 
     if (spaceGame) {
-        // 1. 太空大战：隐藏所有通用 HUD 按钮 (它有自己的内部 UI)
         m_btnStart->hide();
         m_btnPause->hide();
         m_btnEnd->hide();
@@ -198,7 +181,6 @@ void GameWidget::switchToGame(GameBase* game) {
         connect(spaceGame, &SpaceGame::requestReturnToMenu, this, &GameWidget::onReturnToMenu);
     }
     else if (game == m_policeGame) {
-        // 2. 【新增】生死时速：隐藏开始/暂停/设置/结束，只保留退出
         m_btnStart->hide();
         m_btnPause->hide();
         m_btnEnd->hide();
@@ -210,7 +192,6 @@ void GameWidget::switchToGame(GameBase* game) {
         m_btnQuitGame->move(40, 550); // 左下角位置
     }
     else {
-        // 3. 其他游戏 (鼠、苹果、激流勇进)：显示所有通用按钮
         m_btnStart->show();
         m_btnPause->show();
         m_btnEnd->show();
@@ -218,14 +199,12 @@ void GameWidget::switchToGame(GameBase* game) {
         m_btnQuitGame->show();
 
         if (game == m_frogGame) {
-            // --- 激流勇进：青蛙专属皮肤 ---
             m_btnStart->loadImages(":/img/frog_start.png", ":/img/frog_start_hover.png", ":/img/frog_start_pressed.png");
             m_btnPause->loadImages(":/img/frog_pause.png", ":/img/frog_pause_hover.png", ":/img/frog_pause_pressed.png");
             m_btnEnd->loadImages(":/img/frog_end.png", ":/img/frog_end_hover.png", ":/img/frog_end_pressed.png");
             m_btnSettings->loadImages(":/img/frog_setting.png", ":/img/frog_setting_hover.png", ":/img/frog_setting_pressed.png");
             m_btnQuitGame->loadImages(":/img/frog_exit.png", ":/img/frog_exit_hover.png", ":/img/frog_exit_pressed.png");
 
-            // 调整坐标
             m_btnStart->move(160, 480);
             m_btnPause->move(120, 510);
             m_btnEnd->move(200, 530);
@@ -233,16 +212,13 @@ void GameWidget::switchToGame(GameBase* game) {
             m_btnQuitGame->move(20, 550);
         }
         else {
-            // --- 鼠的故事 / 拯救苹果：通用灰色皮肤 ---
             m_btnStart->loadImages(":/img/public_start.bmp", ":/img/public_start_on.bmp", ":/img/public_start_clicked.bmp");
             m_btnPause->loadImages(":/img/public_pause.bmp", ":/img/public_pause_on.bmp", ":/img/public_pause_clicked.bmp");
             m_btnEnd->loadImages(":/img/public_end.bmp", ":/img/public_end_on.bmp", ":/img/public_end_clicked.bmp");
             m_btnSettings->loadImages(":/img/public_settings.bmp", ":/img/public_settings_on.bmp", ":/img/public_settings_clicked.bmp");
             m_btnQuitGame->loadImages(":/img/public_exit.bmp", ":/img/public_exit_on.bmp", ":/img/public_exit_clicked.bmp");
 
-            // 调整坐标
             if (game == m_moleGame) {
-                // 鼠的故事
                 m_btnEnd->move(450, 480);
                 m_btnPause->move(400, 510);
                 m_btnStart->move(490, 530);
@@ -250,7 +226,6 @@ void GameWidget::switchToGame(GameBase* game) {
                 m_btnQuitGame->move(40, 550);
             }
             else {
-                // 拯救苹果 (m_appleGame)
                 m_btnStart->move(160, 480);
                 m_btnPause->move(120, 510);
                 m_btnEnd->move(200, 530);
@@ -334,17 +309,14 @@ void GameWidget::onPauseGame() {
 
 
 void GameWidget::onShowSettings() {
-    // 1. 判断是否是鼠的游戏
     MoleGame* moleGame = dynamic_cast<MoleGame*>(m_currentGame);
     if (moleGame) {
-        // ... 原有的鼠的游戏设置逻辑 ...
         GameSettingsData oldSettings = m_settingsDialog->getSettings();
         if (m_settingsDialog->exec() == QDialog::Accepted) {
             GameSettingsData newSettings = m_settingsDialog->getSettings();
             bool changed = (oldSettings.gameTimeSec != newSettings.gameTimeSec) ||
                  (oldSettings.spawnIntervalMs != newSettings.spawnIntervalMs) ||
                  (oldSettings.stayTimeMs != newSettings.stayTimeMs);
-            // ... 比较 ...
             if (changed) {
                 ConfirmationDialog dlg(ConfirmationDialog::Mode_ApplySettings, this);
                 if (dlg.exec() == QDialog::Accepted) {
@@ -419,7 +391,6 @@ void GameWidget::onShowSettings() {
         // 弹出设置框
         if (m_policeSettingsDialog->exec() == QDialog::Accepted) {
             PoliceSettingsData data = m_policeSettingsDialog->getSettings();
-            // 弹出确认框 (ConfirmationDialog) 逻辑同上
             ConfirmationDialog dlg(ConfirmationDialog::Mode_ApplySettings, this);
             if (dlg.exec() == QDialog::Accepted) {
                 policeGame->updateSettings(data);
@@ -436,19 +407,14 @@ void GameWidget::updateButtons() {
 
     GameState state = m_currentGame->getState();
 
-    // 开始按钮：不在游戏中时可用
     m_btnStart->setEnabled(state == GameState::Ready || state == GameState::GameOver);
 
-    // 暂停按钮：游戏中或暂停时可用
     m_btnPause->setEnabled(state == GameState::Playing || state == GameState::Paused);
 
-    // 结束本局按钮：游戏中或暂停时可用 (点了就重置)
     m_btnEnd->setEnabled(state == GameState::Playing || state == GameState::Paused);
 
-    // 设置按钮：未开始时可用
     m_btnSettings->setEnabled(state == GameState::Ready || state == GameState::GameOver);
 
-    // 退出菜单按钮：始终可用
     m_btnQuitGame->setEnabled(true);
 }
 
@@ -460,14 +426,12 @@ void GameWidget::paintEvent(QPaintEvent* event) {
         painter.fillRect(rect(), QColor(240, 240, 240));
     }
     else if (m_appState == InGame && m_currentGame) {
-        // *** 核心：委托给当前游戏绘制 ***
         m_currentGame->draw(painter);
     }
 }
 
 void GameWidget::keyPressEvent(QKeyEvent* event) {
     if (m_appState == InGame && m_currentGame) {
-        // 【关键修复】如果是空格键，强制传递给游戏逻辑，不让其触发按钮焦点
         if (event->key() == Qt::Key_Space) {
             m_currentGame->handleKeyPress(event);
             return; // 阻止事件传播
@@ -483,24 +447,28 @@ void GameWidget::onGameFinished(int score, bool win) {
         m_renderTimer->stop();
     }
 
-    // 【修改】判断当前游戏类型
     GameResultDialog::GameTheme theme = GameResultDialog::Theme_Mole; // 默认
 
-    // 如果是苹果游戏，切换主题
     if (dynamic_cast<AppleGame*>(m_currentGame)) {
         theme = GameResultDialog::Theme_Apple;
     }
     else if (dynamic_cast<FrogGame*>(m_currentGame)) {
-        theme = GameResultDialog::Theme_Frog; 
+        theme = GameResultDialog::Theme_Frog;
+    }
+    else if (dynamic_cast<PoliceGame*>(m_currentGame)) {
+        theme = GameResultDialog::Theme_Police; // 识别警察游戏
     }
 
-    // 创建对话框并传入主题
     GameResultDialog dlg(theme, this);
-    dlg.setGameResult(score, win);
 
+    PoliceGame* policeGame = dynamic_cast<PoliceGame*>(m_currentGame);
+    if (policeGame) {
+        dlg.setRole(policeGame->getRole());
+    }
+
+    dlg.setGameResult(score, win);
     dlg.exec();
 
-    // ... 后续处理逻辑不变 ...
     GameResultDialog::ResultAction action = dlg.getSelectedAction();
     if (action == GameResultDialog::Action_Replay) {
         onStartGame();
@@ -514,11 +482,8 @@ void GameWidget::onGameFinished(int score, bool win) {
         onStopGameRound();
     }
 }
-
 void GameWidget::onScoreChanged(int score) {
-    // 如果需要显示在 GameWidget 这一层的 HUD，可以在这里处理
-    // 目前绘制工作都下放给 GameBase 了，所以这里暂时留空或者打印日志
-    // qDebug() << "Score:" << score;
+
 }
 
 void GameWidget::onExitApp() {

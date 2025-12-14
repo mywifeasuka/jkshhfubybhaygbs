@@ -2,7 +2,6 @@
 #include <QRandomGenerator>
 #include <QDebug>
 
-// 【修复】地鼠洞坐标配置，数组大小改为8，与实际坐标数匹配
 const QPoint molePositions[8] = {
     QPoint(30, 330), QPoint(230, 330), QPoint(430, 330), QPoint(640, 330),
     QPoint(30, 140), QPoint(230, 140), QPoint(430, 140), QPoint(640, 140)
@@ -29,7 +28,6 @@ MoleGame::MoleGame(QObject* parent) : GameBase(parent) {
     m_spawnTimer = new QTimer(this);
     connect(m_spawnTimer, &QTimer::timeout, this, &MoleGame::onSpawnTimerTick);
 
-    // 【修复】循环次数改为8
     for (int i = 0; i < 8; ++i) {
         Mole* mole = new Mole(this);
         mole->setPos(molePositions[i]);
@@ -44,7 +42,6 @@ MoleGame::~MoleGame() {
     m_moles.clear();
 }
 
-// ... updateSettings, increaseDifficulty 保持不变 ...
 void MoleGame::updateSettings(const GameSettingsData& data) { m_settings = data; }
 void MoleGame::increaseDifficulty() {
     m_settings.spawnIntervalMs = qMax(300, m_settings.spawnIntervalMs - 100);
@@ -78,7 +75,6 @@ void MoleGame::startGame() {
         m_gameTimer->start();
         m_backgroundMusic->play();
 
-        // 【修改点】开局直接调用补员逻辑，生成4只
         maintainMoleCount();
 
         // 启动保底定时器，每500ms检查一次，防止场上地鼠意外变空
@@ -146,7 +142,6 @@ void MoleGame::handleKeyPress(QKeyEvent* event) {
     }
 }
 
-// 【新增】核心补员逻辑：保持场上有4只地鼠
 void MoleGame::maintainMoleCount() {
     if (m_state != GameState::Playing) return;
 
@@ -202,8 +197,7 @@ void MoleGame::onMoleHit() {
 
 void MoleGame::onMoleEscaped() {
     m_lives--;
-    // 音效已移至 Mole::onStayTimerTimeout 中播放
-    // m_missSound->play(); 
+
 
     if (m_lives <= 0) {
         stopGame();

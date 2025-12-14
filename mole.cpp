@@ -5,29 +5,24 @@ Mole::Mole(QObject* parent)
     : QObject(parent),
     currentState(Hidden) {
 
-    // 1. 加载资源
     normalPixmap.load(":/img/mole_normal.bmp");
     hitPixmap.load(":/img/mole_hit.bmp");
 
-    // 尝试加载两帧逃跑动画，如果资源里没有专门的1/2，则用通用的代替
     escapePixmap1.load(":/img/mole_hide_1.bmp");
     if (escapePixmap1.isNull()) escapePixmap1.load(":/img/mole_hide.bmp");
 
     escapePixmap2.load(":/img/mole_hide_2.bmp");
     if (escapePixmap2.isNull()) escapePixmap2.load(":/img/mole_hide.bmp");
 
-    // 2. 初始化音效
     escapeSound = new QSoundEffect(this);
     escapeSound->setSource(QUrl::fromLocalFile(":/snd/mouse_away.wav"));
 
-    // 3. 初始化计时器
     stayTimer = new QTimer(this);
     stayTimer->setSingleShot(true);
     connect(stayTimer, &QTimer::timeout, this, &Mole::onStayTimerTimeout);
 
     animationTimer = new QTimer(this);
     animationTimer->setSingleShot(true);
-    // 注意：Hit和Escape复用这个Timer，通过 connect 动态绑定或状态判断处理
     connect(animationTimer, &QTimer::timeout, this, &Mole::onEscapeAnimation);
 
     visualCountdownTimer = new QTimer(this);
@@ -96,12 +91,11 @@ void Mole::hitByUser() {
 
     currentState = Hit;
 
-    // 切换 Timer 连接到 Hit 逻辑
     animationTimer->disconnect(this);
     connect(animationTimer, &QTimer::timeout, this, &Mole::onHitAnimationFinished);
     animationTimer->start(500);
 
-    emit hitSuccess(); // 抛出信号通知 GameWidget 补充新地鼠
+    emit hitSuccess(); 
 }
 
 void Mole::onHitAnimationFinished() {

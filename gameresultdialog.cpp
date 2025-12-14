@@ -5,32 +5,36 @@
 #include <QDebug>
 
 GameResultDialog::GameResultDialog(GameTheme theme, QWidget* parent)
-    : QDialog(parent), m_currentTheme(theme), m_selectedAction(Action_None)
+    : QDialog(parent), m_currentTheme(theme), m_selectedAction(Action_None), m_role(0)
 {
     setWindowFlags(Qt::FramelessWindowHint | Qt::Dialog);
     setAttribute(Qt::WA_TranslucentBackground);
 
-    // 1. 根据主题加载背景
     QString bgPath;
     if (m_currentTheme == Theme_Apple) {
         bgPath = ":/img/apple_dlg_bg.png";
     }
     else if (m_currentTheme == Theme_Frog) {
-        bgPath = ":/img/frog_dlg_bg.png"; // 【新增】
+        bgPath = ":/img/frog_dlg_bg.png";
     }
-    else {
+    else if (m_currentTheme == Theme_Mole) {
         bgPath = ":/img/mole_dlg_bg.bmp";
     }
-    m_bgPixmap.load(bgPath);
 
-    if (!m_bgPixmap.isNull()) {
-        setFixedSize(m_bgPixmap.size());
+    if (!bgPath.isEmpty()) {
+        m_bgPixmap.load(bgPath);
+        if (!m_bgPixmap.isNull()) setFixedSize(m_bgPixmap.size());
+        else setFixedSize(400, 250);
     }
     else {
         setFixedSize(400, 250);
     }
 
     setupUI();
+}
+
+void GameResultDialog::setRole(int role) {
+    m_role = role;
 }
 
 void GameResultDialog::setupUI() {
@@ -67,17 +71,10 @@ void GameResultDialog::setupUI() {
         suffix = ".png";
     }
     else if (m_currentTheme == Theme_Frog) {
-        // 【新增】激流勇进资源
         replayBase = ":/img/frog_dlg_replay";
-        nextBase = ":/img/frog_dlg_next"; // 注意：虽然只有成功界面，但可能仍需要“下一关”或“重玩”
-        endBase = ":/img/frog_end";      // 或者是 frog_dlg_end
-        suffix = ".png";
-
-        // 修正：根据资源列表，激流勇进的按钮似乎没有统一的 dlg 前缀？
-        // 让我们检查资源... 
-        // 资源列表中有 frog_dlg_replay.png, frog_dlg_next.png, frog_dlg_end.png
-        // 确认无误。
+        nextBase = ":/img/frog_dlg_next";
         endBase = ":/img/frog_dlg_end";
+        suffix = ".png";
     }
     else {
         replayBase = ":/img/mole_dlg_replay";
@@ -86,25 +83,21 @@ void GameResultDialog::setupUI() {
         suffix = ".bmp";
     }
 
-    // 辅助 Lambda：根据基础名生成三种状态的路径
     auto createButton = [&](const QString& baseName, QWidget* parent) -> ImageButton* {
         return new ImageButton(
-            baseName + suffix,                  // Normal: xxx.png
-            baseName + "_hover" + suffix,       // Hover:  xxx_hover.png
-            baseName + "_pressed" + suffix,     // Pressed: xxx_pressed.png
+            baseName + suffix,
+            baseName + "_hover" + suffix,
+            baseName + "_pressed" + suffix,
             parent
         );
         };
 
-    // 1. 继续/重玩按钮
     m_btnReplay = createButton(replayBase, this);
     connect(m_btnReplay, &ImageButton::clicked, this, &GameResultDialog::onReplayClicked);
 
-    // 2. 下一关按钮
     m_btnNext = createButton(nextBase, this);
     connect(m_btnNext, &ImageButton::clicked, this, &GameResultDialog::onNextLevelClicked);
 
-    // 3. 结束按钮
     m_btnEnd = createButton(endBase, this);
     connect(m_btnEnd, &ImageButton::clicked, this, &GameResultDialog::onEndClicked);
 
@@ -116,9 +109,9 @@ void GameResultDialog::setupUI() {
     mainLayout->addLayout(btnLayout);
 }
 
-// ... paintEvent, setGameResult, 槽函数保持不变 ...
 void GameResultDialog::setGameResult(int score, bool isWin) {
     m_scoreLabel->setText(QStringLiteral("本局得分: ") + QString::number(score));
+
     if (isWin) {
         m_messageLabel->setText(QStringLiteral("恭喜，您通过了！"));
         m_btnNext->setVisible(true);
@@ -126,6 +119,35 @@ void GameResultDialog::setGameResult(int score, bool isWin) {
     else {
         m_messageLabel->setText(QStringLiteral("您认输吧！"));
         m_btnNext->setVisible(false);
+    }
+
+    if (m_currentTheme == Theme_Police) {
+        QString bgPath;
+
+        if (m_role == 0) { // 警察
+            bgPath = isWin ? ":/img/police_win_0.png" : ":/img/police_lost_0.png";
+        }
+        else { // 小偷
+            bgPath = isWin ? ":/img/police_win_1.png" : ":/img/police_lost_1.png";
+        }
+
+        if (!bgPath.isEmpty()) {
+            m_bgPixmap.load(bgPath);
+            if (!m_bgPixmap.isNull()) {
+                setFixedSize(m_bgPixmap.size()); // 调整窗口大小适应背景
+                update(); // 强制重绘
+            }
+        }
+
+        m_btnNext->setVisible(false);
+
+        m_messageLabel->setVisible(false);
+
+        m_scoreLabel->setStyleSheet(
+            "font-family: 'Arial'; font-size: 16px; font-weight: bold; "
+            "color: white; background-color: rgba(0, 0, 0, 150); "
+            "border-radius: 4px; padding: 4px;"
+        );
     }
 }
 

@@ -15,7 +15,7 @@ struct PoliceSettingsData {
     int policeVehicle = 0;  // 警察的载具 (0: 汽车, 1: 自行车)
     int thiefVehicle = 0;   // 小偷的载具 (0: 汽车, 1: 自行车)
 
-    int vehicle = 0;        // 【只读】当前玩家角色的载具 (用于游戏逻辑)
+    int vehicle = 0;        // 当前玩家角色的载具 (用于游戏逻辑)
     QString articleName;    // 选中的文章文件名
 };
 

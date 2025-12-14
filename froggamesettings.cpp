@@ -41,8 +41,6 @@ FrogGameSettings::FrogGameSettings(QWidget* parent) : QDialog(parent), m_isDragg
 
 void FrogGameSettings::setupUI() {
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    // 【修改点 1】调整布局边距，对齐其他设置界面
-    // 之前是 180, 80... 现在改回标准的 120, 60... 
     mainLayout->setContentsMargins(150, 100, 40, 30);
     mainLayout->setSpacing(20);
 
@@ -57,7 +55,6 @@ void FrogGameSettings::setupUI() {
         m_comboCourse->addItem(pair.first, pair.second);
     }
 
-    // 【修改点 2】QSS 增加按钮按下的图片切换
     m_comboCourse->setStyleSheet(
         "QComboBox {"
         "    border: 1px solid gray;"
@@ -80,7 +77,6 @@ void FrogGameSettings::setupUI() {
         "QComboBox::down-arrow {"
         "    image: url(:/img/dropdown_button.bmp);"
         "}"
-        // 【新增】箭头图标 - 按下/打开状态
         "QComboBox::down-arrow:on {"
         "    image: url(:/img/dropdown_button_pressed.bmp);"
         "    top: 1px; left: 1px;" // 微微偏移增加按压感
@@ -131,8 +127,6 @@ void FrogGameSettings::setupUI() {
     mainLayout->addLayout(btnLayout);
 }
 
-// ... 剩余代码保持不变 ...
-// (setupSliderStyle, paintEvent, mouseEvents, setSettings, getSettings, slots)
 
 void FrogGameSettings::setupSliderStyle(QSlider* slider) {
     slider->setStyleSheet(

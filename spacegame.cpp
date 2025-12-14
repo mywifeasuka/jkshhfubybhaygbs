@@ -49,9 +49,6 @@ SpaceGame::~SpaceGame() {
     qDeleteAll(m_entities);
     m_entities.clear();
 
-    // 【关键修复】不要在这里 delete 按钮！
-    // 按钮的父对象是 GameWidget，它会自动回收这些内存。
-    // 手动 delete 会导致程序退出时崩溃 (Double Free)。
 }
 
 void SpaceGame::setupInternalUI() {
@@ -92,7 +89,6 @@ void SpaceGame::setupInternalUI() {
     m_btnHiscore->move(centerX, startY + 2 * (btnH + spacing));
     m_btnExit->move(centerX, startY + 3 * (btnH + spacing));
 
-    // 左下角退出按钮 (实际功能为暂停/菜单)
     m_btnGamePause = createBtn("exit");
     m_btnGamePause->move(20, 530);
     connect(m_btnGamePause, &ImageButton::clicked, this, &SpaceGame::onBtnGamePauseClicked);
@@ -101,7 +97,6 @@ void SpaceGame::setupInternalUI() {
     hideGameUI();
 }
 
-// 【补全】显示/隐藏游戏内UI
 void SpaceGame::showGameUI() {
     if (m_btnGamePause) m_btnGamePause->show();
 }
@@ -109,7 +104,6 @@ void SpaceGame::hideGameUI() {
     if (m_btnGamePause) m_btnGamePause->hide();
 }
 
-// 【补全】显示/隐藏菜单UI
 void SpaceGame::showMenuUI(bool isPauseMode) {
     if (m_btnOption) m_btnOption->show();
     if (m_btnHiscore) m_btnHiscore->show();
@@ -139,7 +133,7 @@ void SpaceGame::initGame() {
     m_entities.clear();
 
     m_playerPos = QPointF(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 80);
-    m_lives = m_settings.lives; // 重置生命值，防止死循环
+    m_lives = m_settings.lives; 
 
     m_difficultyLevel = m_settings.difficulty;
     m_spawnInterval = 80 - (m_difficultyLevel - 1) * 5;
@@ -180,7 +174,6 @@ void SpaceGame::stopGame() {
 }
 
 void SpaceGame::onGameTick() {
-    // 1. 倒计时逻辑
     m_gameTimeFrames--;
     if (m_gameTimeFrames <= 0) {
         m_gameTimeFrames = TIME_CYCLE_SEC * GAME_FPS;
@@ -188,24 +181,20 @@ void SpaceGame::onGameTick() {
         m_spawnInterval = qMax(20, m_spawnInterval - 5);
     }
 
-    // 2. 玩家移动 (速度4.0)
     double playerSpeed = 4.0;
     m_playerPos.rx() += playerSpeed * m_playerDir;
     if (m_playerPos.x() < 50) { m_playerPos.setX(50); m_playerDir = 1.0; }
     else if (m_playerPos.x() > SCREEN_WIDTH - 50) { m_playerPos.setX(SCREEN_WIDTH - 50); m_playerDir = -1.0; }
 
-    // 3. 生成敌人
     m_spawnTimer++;
     if (m_spawnTimer >= m_spawnInterval) {
         spawnEnemy();
         m_spawnTimer = 0;
     }
 
-    // 4. 实体更新
     for (SpaceEntity* e : m_entities) {
         if (!e->active) continue;
 
-        // 子弹追踪
         if (e->type == Type_Bullet) {
             SpaceEntity* target = nullptr;
             if (!e->targetLetter.isEmpty()) {
@@ -225,7 +214,6 @@ void SpaceGame::onGameTick() {
             }
         }
 
-        // 移动
         if (e->type == Type_Enemy) {
             e->pos.ry() += e->velocity.y();
             double waveAmp = 80.0;
@@ -236,7 +224,6 @@ void SpaceGame::onGameTick() {
             e->pos += e->velocity;
         }
 
-        // 边界
         if (e->type == Type_Enemy && e->pos.y() > SCREEN_HEIGHT + 50) e->active = false;
         else if (e->type == Type_Bullet && (e->pos.y() < -50 || e->pos.y() > SCREEN_HEIGHT)) e->active = false;
         else if (e->type == Type_Explosion) {
@@ -245,14 +232,11 @@ void SpaceGame::onGameTick() {
         }
     }
 
-    // 5. 碰撞检测与崩溃修复
-    // checkCollisions 返回 true 代表游戏结束
     if (checkCollisions()) {
         handleGameOver();
-        return; // 【绝对关键】立即退出，防止后续代码访问已清空的 m_entities
+        return; 
     }
 
-    // 6. 清理实体
     for (auto it = m_entities.begin(); it != m_entities.end(); ) {
         if (!(*it)->active) {
             delete* it;
@@ -265,7 +249,6 @@ void SpaceGame::onGameTick() {
 }
 
 bool SpaceGame::checkCollisions() {
-    // 1. 子弹击中敌人
     for (SpaceEntity* bullet : m_entities) {
         if (bullet->type == Type_Bullet && bullet->active) {
             for (SpaceEntity* enemy : m_entities) {
@@ -285,7 +268,6 @@ bool SpaceGame::checkCollisions() {
         }
     }
 
-    // 2. 敌人撞击玩家
     double playerRadius = 30.0;
     for (SpaceEntity* enemy : m_entities) {
         if (enemy->type == Type_Enemy && enemy->active) {
@@ -297,7 +279,7 @@ bool SpaceGame::checkCollisions() {
                 m_explodeSound->play();
 
                 if (m_lives <= 0) {
-                    return true; // 返回 true，通知 onGameTick 结束游戏
+                    return true; 
                 }
             }
         }
@@ -392,7 +374,6 @@ void SpaceGame::spawnEnemy() {
     m_entities.append(new SpaceEntity(Type_Enemy, QPointF(x, -50), QPointF(0, speed), QString(letter)));
 }
 
-// 【修改】
 void SpaceGame::spawnBullet(const QPointF& startPos, const QString& targetLetter) {
     SpaceEntity* bullet = new SpaceEntity(Type_Bullet, startPos, QPointF(0, -15.0));
     bullet->targetLetter = targetLetter;
@@ -438,7 +419,6 @@ void SpaceGame::handleKeyPress(QKeyEvent* event) {
             }
         }
 
-        // 【修改】找到目标则传入字母以追踪，未找到传空以直射
         QString tLetter = target ? target->letter : "";
         spawnBullet(m_playerPos, tLetter);
         m_shootSound->play();

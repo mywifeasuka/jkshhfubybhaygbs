@@ -9,7 +9,6 @@
 #pragma execution_character_set("utf-8")
 #endif
 
-// ================= ImageCheckBox 实现 =================
 
 ImageCheckBox::ImageCheckBox(QWidget* parent)
     : QWidget(parent), m_checked(false), m_isHover(false)
@@ -19,7 +18,6 @@ ImageCheckBox::ImageCheckBox(QWidget* parent)
 }
 
 void ImageCheckBox::loadImages(const QString& basePath) {
-    // 【修改点 3】 资源后缀改为 .png
     // 0: 初始 -> .png
     m_pixmaps[0].load(basePath + ".png");
     // 1: 移入 -> _1.png
@@ -80,7 +78,6 @@ void ImageCheckBox::mousePressEvent(QMouseEvent* event) {
     }
 }
 
-// ================= SpaceGameSettings 实现 =================
 
 SpaceGameSettings::SpaceGameSettings(QWidget* parent) : QDialog(parent), m_isDragging(false) {
     setWindowFlags(Qt::FramelessWindowHint | Qt::Dialog);
@@ -110,7 +107,6 @@ void SpaceGameSettings::setupUI() {
     formLayout->setHorizontalSpacing(15);
     formLayout->setVerticalSpacing(12);
 
-    // 1. 难度
     m_sliderDiff = new QSlider(Qt::Horizontal);
     m_sliderDiff->setRange(1, 10);
     setupSliderStyle(m_sliderDiff);
@@ -126,7 +122,6 @@ void SpaceGameSettings::setupUI() {
     l1->setStyleSheet("font-family: 'SimSun'; font-size: 14px; font-weight: bold; color: #333;");
     formLayout->addRow(l1, row1);
 
-    // 2. 生命
     m_sliderLives = new QSlider(Qt::Horizontal);
     m_sliderLives->setRange(1, 5);
     setupSliderStyle(m_sliderLives);
@@ -142,7 +137,6 @@ void SpaceGameSettings::setupUI() {
     l2->setStyleSheet("font-family: 'SimSun'; font-size: 14px; font-weight: bold; color: #333;");
     formLayout->addRow(l2, row2);
 
-    // 3. 奖励模式 (ImageCheckBox)
     QHBoxLayout* row3 = new QHBoxLayout();
 
     m_checkBonus = new ImageCheckBox(this);
@@ -155,7 +149,6 @@ void SpaceGameSettings::setupUI() {
     l3->setStyleSheet("font-family: 'SimSun'; font-size: 14px; font-weight: bold; color: #333;");
     formLayout->addRow(l3, row3);
 
-    // 4. 说明文字
     m_labelBonusDesc = new QLabel("选中此项，游戏过程中\n将出现加分奖励物体。", this);
     m_labelBonusDesc->setStyleSheet("color: #666; font-size: 12px; font-family: 'SimSun';");
 

@@ -54,17 +54,16 @@ void ImageButton::mousePressEvent(QMouseEvent* event) {
     if (event->button() == Qt::LeftButton) {
         isPressed = true;
         currentState = StatePressed;
-        update(); // �����ػ�
+        update(); 
     }
 }
 
 void ImageButton::mouseReleaseEvent(QMouseEvent* event) {
     if (event->button() == Qt::LeftButton && isPressed) {
         isPressed = false;
-        // �������Ƿ��ڰ�ť��
         if (rect().contains(event->pos())) {
             currentState = StateHover;
-            emit clicked(); // ���͵���ź�
+            emit clicked(); 
         }
         else {
             currentState = StateNormal;

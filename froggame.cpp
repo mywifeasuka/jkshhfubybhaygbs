@@ -130,7 +130,6 @@ void FrogGame::loadDictionary(const QString& filename) {
         }
         else {
             if (currentWord.length() >= 2) {
-                // 【修改点】强制转为小写 (toLower)
                 newWords.append(currentWord.toLower());
             }
             currentWord.clear();
@@ -191,7 +190,6 @@ void FrogGame::onAnimTick() {
     m_isCroaking = !m_isCroaking;
 }
 
-// spawnLeaves 逻辑保持不变
 void FrogGame::spawnLeaves() {
     double baseSpeed = 0.5 + (m_settings.difficulty - 1) * 0.4;
     double speeds[] = { baseSpeed, -baseSpeed * 1.3, baseSpeed * 1.6 };
@@ -228,12 +226,10 @@ void FrogGame::onGameTick() {
         leaf->x += leaf->speed;
 
         if (leaf->x < -200 || leaf->x > SCREEN_WIDTH + 200) {
-            // 【修改点】荷叶出界
             if (m_currentLeaf == leaf) {
                 // 青蛙在上面 -> 触发撤退
-                m_splashSound->play(); // 可以换个“惊吓”音效
+                m_splashSound->play(); 
                 retreatFrog(); // 回到上一步
-                // 注意：retreatFrog 内部已经把 m_currentLeaf 指向别的了
             }
 
             // 如果锁定的荷叶出去了，解锁
@@ -258,18 +254,13 @@ void FrogGame::onGameTick() {
 void FrogGame::handleKeyPress(QKeyEvent* event) {
     if (m_state != GameState::Playing) return;
     if (event->key() == Qt::Key_Backspace) {
-        // 退格键逻辑：如果想允许修正，可以保留；如果严格锁定则可移除
-        // 原版通常允许退格，但这里我们采用了“锁定且不可错”逻辑
-        // 根据“打错字母停留”，退格可能没必要，或者只能退格当前锁定的进度
         if (!m_inputBuffer.isEmpty()) m_inputBuffer.chop(1);
         return;
     }
 
-    QString text = event->text(); // 【修改】大小写敏感，不转大写
+    QString text = event->text(); 
     if (text.isEmpty() || text.length() > 1) return;
 
-    // 只接受字母输入 (可选)
-    // if (!text.at(0).isLetter()) return; 
 
     checkInput(text);
 }
@@ -279,7 +270,6 @@ void FrogGame::resetFrog() {
     m_currentLeaf = nullptr;
     m_inputBuffer.clear();
 
-    // 【新增】重置锁定状态
     m_lockedLeaf = nullptr;
     m_isGoalLocked = false;
 
@@ -301,13 +291,10 @@ void FrogGame::pauseGame() {
 }
 
 
-// 【重写】输入判定与锁定逻辑
 void FrogGame::checkInput(const QString& key) {
     int targetRow = m_currentRow + 1;
 
-    // 1. 锁定状态处理 (保持不变)
     if (m_isGoalLocked) {
-        // ... (原代码保持不变) ...
         int nextIdx = m_inputBuffer.length();
         if (nextIdx < m_goalWord.length() && m_goalWord.at(nextIdx) == key.at(0)) {
             m_inputBuffer += key;

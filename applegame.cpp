@@ -3,13 +3,11 @@
 #include <QDebug>
 #include <QtMath>
 
-// ... 常量定义保持不变 ...
 const int GAME_FPS = 60;
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
 AppleGame::AppleGame(QObject* parent) : GameBase(parent) {
-    // ... 资源加载代码保持不变 ...
     m_bgPixmap.load(":/img/apple_background.png");
     m_applePixmap.load(":/img/apple_normal.png");
     m_basketPixmap.load(":/img/apple_basket.png");
@@ -49,9 +47,6 @@ void AppleGame::initGame() {
 
     m_spawnTimer = 0;
 
-    // 【修改点 1】：大幅提高初始难度（加快生成频率）
-    // 原版: 120帧(2s) -> 现在: 60帧(1s) 起步，每升一级减少 4帧
-    // Level 3 (默认) -> 52帧 (不到1秒一波)
     m_spawnInterval = 60 - (m_settings.level - 1) * 4;
     if (m_spawnInterval < 20) m_spawnInterval = 20; // 极限每0.3秒一波
 
@@ -93,17 +88,16 @@ void AppleGame::stopGame() {
 }
 
 void AppleGame::onGameTick() {
-    // 1. 胜利判定
+    // 胜利判定
     if (m_caughtCount >= m_settings.targetCount) {
         stopGame();
         emit gameFinished(m_score, true);
         return;
     }
 
-    // 2. 生成逻辑
+    // 生成逻辑
     m_spawnTimer++;
     if (m_spawnTimer >= m_spawnInterval) {
-        // --- 多重生成逻辑 ---
         int spawnCount = 1;
 
         // 根据等级计算暴击概率 (1级0%, 3级20%, 10级90%)
@@ -124,13 +118,10 @@ void AppleGame::onGameTick() {
 
         m_spawnTimer = 0;
 
-        // --- 【关键修改点】难度控制优化 ---
-
-        // 1. 设置更合理的极限值：最低 35 帧 (约0.6秒一波)，防止太快
+        // 设置极限值
         int minInterval = 35;
 
-        // 2. 减缓增速：不再是每次生成都加速，而是有 10% 的概率加速
-        // 这样难度增长速度会变慢 10 倍，给玩家更多反应时间
+        // 减缓增速
         if (m_spawnInterval > minInterval) {
             if (QRandomGenerator::global()->bounded(10) == 0) {
                 m_spawnInterval--;
@@ -138,7 +129,7 @@ void AppleGame::onGameTick() {
         }
     }
 
-    // 3. 更新物理
+    //更新物理
     updateApples();
 }
 
@@ -149,11 +140,8 @@ void AppleGame::spawnApple() {
 
     char letter = 'A' + QRandomGenerator::global()->bounded(26);
 
-    // 【修改点 3】：增加 Y 轴随机偏移
-    // 这样如果一次生成多个，它们会有高低差，不会重叠在一起
     int yOffset = QRandomGenerator::global()->bounded(100); // 0~100 的偏移
 
-    // 速度也有更大波动
     double speedVariance = QRandomGenerator::global()->bounded(1.0); // 0~1.0 波动
 
     Apple* apple = new Apple(QPointF(x, -50 - yOffset), m_currentBaseSpeed + speedVariance, QString(letter));
@@ -176,12 +164,10 @@ void AppleGame::updateApples() {
         // 正常下落
         apple->pos.setY(apple->pos.y() + apple->speed);
 
-        // 落地检测 (接触地面)
-        // 假设地面 Y 坐标约为 520 (篮子位置)
+        // 落地检测 
         if (apple->pos.y() > 520) {
-            // 【修改】变为烂苹果状态，而不是直接 active=false
             apple->isBad = true;
-            apple->removeTimer = 30; // 停留 30 帧 (约0.5秒)
+            apple->removeTimer = 30; 
 
             // 扣血逻辑
             m_lives--;
@@ -194,7 +180,6 @@ void AppleGame::updateApples() {
         }
     }
 
-    // 清理逻辑不变 (active=false 的会被删掉)
     if (m_state != GameState::Playing) return;
     for (auto it = m_apples.begin(); it != m_apples.end(); ) {
         if (!(*it)->active) {
@@ -238,7 +223,6 @@ void AppleGame::handleKeyPress(QKeyEvent* event) {
 }
 
 void AppleGame::draw(QPainter& painter) {
-    // ... 前面的背景、篮子绘制不变 ...
     painter.setRenderHint(QPainter::Antialiasing);
     if (!m_bgPixmap.isNull()) painter.drawPixmap(0, 0, m_bgPixmap);
     else painter.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, QColor(135, 206, 235));
@@ -253,7 +237,6 @@ void AppleGame::draw(QPainter& painter) {
     for (Apple* apple : m_apples) {
         if (!apple->active) continue;
 
-        // 【修改】根据状态选择图片
         if (apple->isBad) {
             // 绘制烂苹果
             if (!m_appleBadPixmap.isNull()) {
@@ -261,7 +244,6 @@ void AppleGame::draw(QPainter& painter) {
                     apple->pos.y() - m_appleBadPixmap.height() / 2,
                     m_appleBadPixmap);
             }
-            // 烂苹果不需要画字母
         }
         else {
             // 绘制正常苹果
@@ -277,7 +259,6 @@ void AppleGame::draw(QPainter& painter) {
         }
     }
 
-    // ... UI 文字绘制不变 ...
     painter.setPen(Qt::black);
     painter.setFont(QFont("Microsoft YaHei", 14, QFont::Bold));
     QString lifeStr = QStringLiteral("生命: ");

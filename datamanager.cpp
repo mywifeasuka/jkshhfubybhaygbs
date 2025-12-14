@@ -16,10 +16,8 @@ void DataManager::loadArticlesFromDir(const QString& dirPath) {
 
     QFileInfoList fileList = dir.entryInfoList();
 
-    // 【关键修复】获取编码器时增加空指针保护
     QTextCodec* codec = QTextCodec::codecForName("GBK");
     if (!codec) codec = QTextCodec::codecForName("UTF-8");
-    // 如果还是拿不到，就用系统默认的，防止崩溃
     if (!codec) codec = QTextCodec::codecForLocale();
 
     for (const QFileInfo& fileInfo : fileList) {
@@ -27,13 +25,12 @@ void DataManager::loadArticlesFromDir(const QString& dirPath) {
         if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
             QByteArray data = file.readAll();
 
-            // 【关键修复】确保 codec 有效再使用
             QString content;
             if (codec) {
                 content = codec->toUnicode(data);
             }
             else {
-                content = QString::fromLocal8Bit(data); // 最后的保底
+                content = QString::fromLocal8Bit(data); 
             }
 
             // 清洗文本：替换换行符为空格，去除首尾空白
@@ -55,9 +52,7 @@ void DataManager::loadArticlesFromDir(const QString& dirPath) {
 }
 
 QString DataManager::getRandomArticle() {
-    // 【双重保险】
     if (m_articles.isEmpty()) {
-        // 重新塞入默认数据
         m_articles << "Ready Go";
     }
     int index = QRandomGenerator::global()->bounded(m_articles.size());

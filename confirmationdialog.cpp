@@ -25,12 +25,12 @@ void ConfirmationDialog::setupUI(Mode mode) {
     mainLayout->setContentsMargins(40, 60, 40, 40); // 根据背景图调整边距
     mainLayout->setSpacing(20);
 
-    // 1. 提示文字
+    // 提示文字
     m_messageLabel = new QLabel(this);
     m_messageLabel->setAlignment(Qt::AlignCenter);
     m_messageLabel->setStyleSheet("font-family: 'Microsoft YaHei'; font-size: 16px; font-weight: bold; color: #5D4037;");
     
-    // 2. 按钮布局
+    //按钮布局
     QHBoxLayout* btnLayout = new QHBoxLayout();
     btnLayout->setSpacing(20);
     btnLayout->addStretch();
@@ -38,23 +38,18 @@ void ConfirmationDialog::setupUI(Mode mode) {
     if (mode == Mode_ExitGame) {
         m_messageLabel->setText(QStringLiteral("你真的要退出吗？"));
         
-        // 确认退出按钮 (MAIN_DLG_EXIT)
         m_btnConfirm = new ImageButton(":/img/main_dlg_exit.bmp", ":/img/main_dlg_exit_hover.bmp", ":/img/main_dlg_exit_pressed.bmp", this);
         
-        // 取消/继续按钮 (MAIN_DLG_REPLAY - 原版这里用Replay表示留在游戏里)
         m_btnCancel = new ImageButton(":/img/main_dlg_replay.bmp", ":/img/main_dlg_replay_hover.bmp", ":/img/main_dlg_replay_pressed.bmp", this);
     } 
     else if (mode == Mode_ApplySettings) {
         m_messageLabel->setText(QStringLiteral("设置改变，立即生效吗？"));
         
-        // 是 (YES)
         m_btnConfirm = new ImageButton(":/img/yes.bmp", ":/img/yes_hover.bmp", ":/img/yes_pressed.bmp", this);
         
-        // 否 (NO)
         m_btnCancel = new ImageButton(":/img/no.bmp", ":/img/no_hover.bmp", ":/img/no_pressed.bmp", this);
     }
 
-    // 连接信号：Confirm -> Accept, Cancel -> Reject
     connect(m_btnConfirm, &ImageButton::clicked, this, &QDialog::accept);
     connect(m_btnCancel, &ImageButton::clicked, this, &QDialog::reject);
 
