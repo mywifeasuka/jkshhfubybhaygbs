@@ -29,7 +29,7 @@ private slots:
 private:
     void initMapPath();
     void loadResources();
-    void loadArticle();
+    void loadArticle(const QString& filename = "");
 
     // 增加 direction 参数
     void getCarState(double distance, int direction, const QVector<QPixmap>& sprites,

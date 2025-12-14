@@ -171,9 +171,13 @@
 
 	<file alias="img/police_background.png">Police/Images/POLICE_BACKGROUND.png</file>
 	<file alias="img/police_bike.png">Police/Images/POLICE_BIKE.png</file>
+	<file alias="img/police_bike_selected.png">Police/Images/POLICE_BIKE_selected.png</file>
 	<file alias="img/police_blue.png">Police/Images/POLICE_BLUE.png</file>
 	<file alias="img/police_cancel.png">Police/Images/POLICE_CANCEL.png</file>
+	<file alias="img/police_cancel_hover.png">Police/Images/POLICE_CANCEL_hover.png</file>
+	<file alias="img/police_cancel_pressed.png">Police/Images/POLICE_CANCEL_pressed.png</file>
 	<file alias="img/police_car.png">Police/Images/POLICE_CAR.png</file>
+	<file alias="img/police_car_selected.png">Police/Images/POLICE_CAR_selected.png</file>
 	<file alias="img/police_create.png">Police/Images/POLICE_CREATE.png</file>
 	<file alias="img/police_input.png">Police/Images/POLICE_INPUT.png</file>
 	<file alias="img/police_join.png">Police/Images/POLICE_JOIN.png</file>
@@ -186,12 +190,18 @@
 	<file alias="img/police_ping.png">Police/Images/POLICE_PING.png</file>
 	<file alias="img/police_ping_bg.png">Police/Images/POLICE_PING_BG.png</file>
 	<file alias="img/police_police.png">Police/Images/POLICE_POLICE.png</file>
+	<file alias="img/police_police_selected.png">Police/Images/POLICE_POLICE_selected.png</file>
 	<file alias="img/police_refresh.png">Police/Images/POLICE_REFRESH.png</file>
 	<file alias="img/police_return.png">Police/Images/POLICE_RETURN.png</file>
+	<file alias="img/police_return_hover.png">Police/Images/POLICE_RETURN_hover.png</file>
+	<file alias="img/police_return_pressed.png">Police/Images/POLICE_RETURN_pressed.png</file>
 	<file alias="img/police_serverlist_bg.png">Police/Images/POLICE_SERVERLIST_BG.png</file>
 	<file alias="img/police_setting_bg.png">Police/Images/POLICE_SETTING_BG.png</file>
 	<file alias="img/police_start.png">Police/Images/POLICE_START.png</file>
+	<file alias="img/police_start_hover.png">Police/Images/POLICE_START_hover.png</file>
+	<file alias="img/police_start_pressed.png">Police/Images/POLICE_START_pressed.png</file>
 	<file alias="img/police_thief.png">Police/Images/POLICE_THIEF.png</file>
+	<file alias="img/police_thief_selected.png">Police/Images/POLICE_THIEF_selected.png</file>
 	<file alias="img/police_win_0.png">Police/Images/POLICE_WIN_0.png</file>
 	<file alias="img/police_win_1.png">Police/Images/POLICE_WIN_1.png</file>
 	<file alias="img/police_yellow.png">Police/Images/POLICE_YELLOW.png</file>
