@@ -4,12 +4,17 @@
 #include <QFormLayout>
 #include <QPainter>
 
+// 【修复】强制使用UTF-8编码，解决MSVC编译器下的中文乱码问题
+#if defined(_MSC_VER) && (_MSC_VER >= 1600)
+#pragma execution_character_set("utf-8")
+#endif
+
 PoliceGameSettings::PoliceGameSettings(QWidget* parent) : QDialog(parent), m_isDragging(false) {
     setWindowFlags(Qt::FramelessWindowHint | Qt::Dialog);
     setAttribute(Qt::WA_TranslucentBackground);
 
-    // 加载背景，如果专用的没有就用通用的
     m_bgPixmap.load(":/img/police_setting_bg.png");
+    // 如果没有专用背景，使用默认图
     if (m_bgPixmap.isNull()) m_bgPixmap.load(":/img/mole_setup.bmp");
 
     if (!m_bgPixmap.isNull()) setFixedSize(m_bgPixmap.size());
@@ -17,14 +22,15 @@ PoliceGameSettings::PoliceGameSettings(QWidget* parent) : QDialog(parent), m_isD
 
     setupUI();
 
+    // 只有 OK 按钮（对应“结束”设置并开始游戏）
     connect(m_btnOk, &ImageButton::clicked, this, &QDialog::accept);
+    // Cancel 对应退出或返回
     connect(m_btnCancel, &ImageButton::clicked, this, &QDialog::reject);
     connect(m_btnDefault, &ImageButton::clicked, this, &PoliceGameSettings::onDefaultClicked);
 }
 
 void PoliceGameSettings::setupUI() {
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    // 根据背景图调整边距
     mainLayout->setContentsMargins(50, 80, 50, 40);
     mainLayout->setSpacing(10);
 
@@ -36,8 +42,7 @@ void PoliceGameSettings::setupUI() {
     m_groupRole = new QButtonGroup(this);
     QRadioButton* rbPolice = new QRadioButton("警察");
     QRadioButton* rbThief = new QRadioButton("小偷");
-    // 设置样式
-    QString radioStyle = "QRadioButton { font-weight: bold; }";
+    QString radioStyle = "QRadioButton { font-weight: bold; color: #333; }";
     rbPolice->setStyleSheet(radioStyle);
     rbThief->setStyleSheet(radioStyle);
 
@@ -55,8 +60,8 @@ void PoliceGameSettings::setupUI() {
 
     QHBoxLayout* vehicleLayout = new QHBoxLayout();
     m_groupVehicle = new QButtonGroup(this);
-    QRadioButton* rbCar = new QRadioButton("汽车 (快)");
-    QRadioButton* rbBike = new QRadioButton("自行车 (慢)");
+    QRadioButton* rbCar = new QRadioButton("汽车");
+    QRadioButton* rbBike = new QRadioButton("自行车");
     rbCar->setStyleSheet(radioStyle);
     rbBike->setStyleSheet(radioStyle);
 
@@ -69,7 +74,7 @@ void PoliceGameSettings::setupUI() {
     vehicleLayout->addStretch();
 
     // 3. 难度滑块
-    QLabel* lblDiff = new QLabel("敌人速度 (难度):", this);
+    QLabel* lblDiff = new QLabel("游戏难度:", this);
     lblDiff->setStyleSheet("font-weight: bold; font-size: 14px; color: #333;");
 
     m_sliderDiff = new QSlider(Qt::Horizontal);
@@ -81,7 +86,7 @@ void PoliceGameSettings::setupUI() {
     );
 
     m_labelDiff = new QLabel("3");
-    m_labelDiff->setStyleSheet("font-weight: bold; color: blue;");
+    m_labelDiff->setStyleSheet("font-weight: bold; color: blue; font-size: 14px;");
 
     QHBoxLayout* diffLayout = new QHBoxLayout();
     diffLayout->addWidget(m_sliderDiff);
@@ -98,13 +103,14 @@ void PoliceGameSettings::setupUI() {
 
     // 底部按钮
     QHBoxLayout* btnLayout = new QHBoxLayout();
+    // 使用“确定”作为进入游戏的按钮
     m_btnOk = new ImageButton(":/img/ok.bmp", ":/img/ok_hover.bmp", ":/img/ok_pressed.bmp", this);
     m_btnCancel = new ImageButton(":/img/cancel.bmp", ":/img/cancel_hover.bmp", ":/img/cancel_pressed.bmp", this);
     m_btnDefault = new ImageButton(":/img/default.bmp", ":/img/default_hover.bmp", ":/img/default_pressed.bmp", this);
 
     btnLayout->addStretch();
-    btnLayout->addWidget(m_btnOk);
-    btnLayout->addWidget(m_btnCancel);
+    btnLayout->addWidget(m_btnOk);     // 结束设置，进入游戏
+    btnLayout->addWidget(m_btnCancel); // 取消
     btnLayout->addWidget(m_btnDefault);
     mainLayout->addLayout(btnLayout);
 }

@@ -36,6 +36,8 @@ GameWidget::GameWidget(QWidget* parent)
     // 默认显示主菜单
     onReturnToMenu();
 
+    this->setFocusPolicy(Qt::StrongFocus);
+
     
 }
 
@@ -178,25 +180,37 @@ void GameWidget::switchToGame(GameBase* game) {
     m_btnFrog->hide();
     m_btnExit->hide();
 
-    // 【修改点】判断是否为太空大战
+    // 判断是否为太空大战 (用于特殊处理)
     SpaceGame* spaceGame = dynamic_cast<SpaceGame*>(game);
 
+    // === 按钮显示逻辑分支 ===
+
     if (spaceGame) {
-        // === 太空大战 (特殊处理) ===
-        // 隐藏所有通用 HUD 按钮 (因为 SpaceGame 有自己的内部 UI)
+        // 1. 太空大战：隐藏所有通用 HUD 按钮 (它有自己的内部 UI)
         m_btnStart->hide();
         m_btnPause->hide();
         m_btnEnd->hide();
         m_btnSettings->hide();
         m_btnQuitGame->hide();
 
-        // 连接 SpaceGame 特有的退出信号 (请求返回主菜单)
-        // 先断开以防重复连接
+        // 连接 SpaceGame 特有的退出信号
         disconnect(spaceGame, &SpaceGame::requestReturnToMenu, this, &GameWidget::onReturnToMenu);
         connect(spaceGame, &SpaceGame::requestReturnToMenu, this, &GameWidget::onReturnToMenu);
     }
+    else if (game == m_policeGame) {
+        // 2. 【新增】生死时速：隐藏开始/暂停/设置/结束，只保留退出
+        m_btnStart->hide();
+        m_btnPause->hide();
+        m_btnEnd->hide();
+        m_btnSettings->hide();
+
+        m_btnQuitGame->show();
+        // 加载通用退出按钮资源
+        m_btnQuitGame->loadImages(":/img/public_exit.bmp", ":/img/public_exit_on.bmp", ":/img/public_exit_clicked.bmp");
+        m_btnQuitGame->move(40, 550); // 左下角位置
+    }
     else {
-        // === 其他游戏 (显示并配置通用按钮) ===
+        // 3. 其他游戏 (鼠、苹果、激流勇进)：显示所有通用按钮
         m_btnStart->show();
         m_btnPause->show();
         m_btnEnd->show();
@@ -204,8 +218,7 @@ void GameWidget::switchToGame(GameBase* game) {
         m_btnQuitGame->show();
 
         if (game == m_frogGame) {
-            // --- 激流勇进 ---
-            // 切换为青蛙专属皮肤
+            // --- 激流勇进：青蛙专属皮肤 ---
             m_btnStart->loadImages(":/img/frog_start.png", ":/img/frog_start_hover.png", ":/img/frog_start_pressed.png");
             m_btnPause->loadImages(":/img/frog_pause.png", ":/img/frog_pause_hover.png", ":/img/frog_pause_pressed.png");
             m_btnEnd->loadImages(":/img/frog_end.png", ":/img/frog_end_hover.png", ":/img/frog_end_pressed.png");
@@ -220,8 +233,7 @@ void GameWidget::switchToGame(GameBase* game) {
             m_btnQuitGame->move(20, 550);
         }
         else {
-            // --- 其他游戏 (鼠、苹果、生死时速) ---
-            // 恢复为通用灰色皮肤
+            // --- 鼠的故事 / 拯救苹果：通用灰色皮肤 ---
             m_btnStart->loadImages(":/img/public_start.bmp", ":/img/public_start_on.bmp", ":/img/public_start_clicked.bmp");
             m_btnPause->loadImages(":/img/public_pause.bmp", ":/img/public_pause_on.bmp", ":/img/public_pause_clicked.bmp");
             m_btnEnd->loadImages(":/img/public_end.bmp", ":/img/public_end_on.bmp", ":/img/public_end_clicked.bmp");
@@ -237,21 +249,13 @@ void GameWidget::switchToGame(GameBase* game) {
                 m_btnSettings->move(440, 550);
                 m_btnQuitGame->move(40, 550);
             }
-            else if (game == m_appleGame) {
-                // 拯救苹果
+            else {
+                // 拯救苹果 (m_appleGame)
                 m_btnStart->move(160, 480);
                 m_btnPause->move(120, 510);
                 m_btnEnd->move(200, 530);
                 m_btnSettings->move(150, 550);
                 m_btnQuitGame->move(20, 550);
-            }
-            else {
-                // 生死时速 (默认位置)
-                m_btnEnd->move(450, 480);
-                m_btnPause->move(400, 510);
-                m_btnStart->move(490, 530);
-                m_btnSettings->move(440, 550);
-                m_btnQuitGame->move(40, 550);
             }
         }
     }
@@ -270,7 +274,21 @@ void GameWidget::onSelectMoleGame() {
 }
 
 void GameWidget::onSelectPoliceGame() {
-    switchToGame(m_policeGame);
+    // 创建并显示设置窗口
+    PoliceGameSettings settingsDlg(this);
+
+    if (settingsDlg.exec() == QDialog::Accepted) {
+        // 获取设置数据
+        PoliceSettingsData data = settingsDlg.getSettings();
+
+        // 切换到游戏界面
+        switchToGame(m_policeGame);
+
+        // 应用设置并初始化
+        m_policeGame->updateSettings(data);
+        m_policeGame->initGame();
+
+    }
 }
 
 void GameWidget::onSelectSpaceGame() {
@@ -449,9 +467,14 @@ void GameWidget::paintEvent(QPaintEvent* event) {
 
 void GameWidget::keyPressEvent(QKeyEvent* event) {
     if (m_appState == InGame && m_currentGame) {
-        // *** 核心：委托给当前游戏处理按键 ***
+        // 【关键修复】如果是空格键，强制传递给游戏逻辑，不让其触发按钮焦点
+        if (event->key() == Qt::Key_Space) {
+            m_currentGame->handleKeyPress(event);
+            return; // 阻止事件传播
+        }
+
         m_currentGame->handleKeyPress(event);
-        update(); // 某些操作可能需要重绘
+        update();
     }
 }
 
